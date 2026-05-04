@@ -1,0 +1,493 @@
+const fs = require("fs");
+const http = require("http");
+const path = require("path");
+
+const root = __dirname;
+const port = Number(process.env.PORT || 5173);
+const host = process.env.HOST || "0.0.0.0";
+const isProduction = process.env.NODE_ENV === "production";
+const clients = new Set();
+const openRouterModel = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+const rooms = new Map();
+
+const liveReloadScript = `
+<script>
+  const events = new EventSource("/__live-reload");
+  events.addEventListener("reload", () => location.reload());
+</script>`;
+
+function sendFile(response, filePath) {
+  fs.readFile(filePath, (error, content) => {
+    if (error) {
+      response.writeHead(404);
+      response.end("Not found");
+      return;
+    }
+
+    const extension = path.extname(filePath).toLowerCase();
+
+    if (path.basename(filePath) === "index.html") {
+      content = content.toString("utf8");
+      if (!isProduction) {
+        content = content.replace("</body>", `${liveReloadScript}</body>`);
+      }
+      response.setHeader("Content-Type", "text/html; charset=utf-8");
+    } else if (extension === ".gif") {
+      response.setHeader("Content-Type", "image/gif");
+    } else if (extension === ".png") {
+      response.setHeader("Content-Type", "image/png");
+    } else if (extension === ".jpg" || extension === ".jpeg") {
+      response.setHeader("Content-Type", "image/jpeg");
+    } else if (extension === ".css") {
+      response.setHeader("Content-Type", "text/css; charset=utf-8");
+    } else if (extension === ".js") {
+      response.setHeader("Content-Type", "text/javascript; charset=utf-8");
+    }
+
+    response.end(content);
+  });
+}
+
+function readJson(request) {
+  return new Promise((resolve, reject) => {
+    let body = "";
+    request.on("data", (chunk) => {
+      body += chunk;
+      if (body.length > 100000) {
+        request.destroy();
+        reject(new Error("Request too large"));
+      }
+    });
+    request.on("end", () => {
+      try {
+        resolve(body ? JSON.parse(body) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    request.on("error", reject);
+  });
+}
+
+function sendJson(response, statusCode, data) {
+  response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
+  response.end(JSON.stringify(data));
+}
+
+async function characterGuide(request, response) {
+  const body = await readJson(request);
+  const characterIdea = String(body.characterIdea || "").trim();
+  const characterClass = String(body.characterClass || "").trim() || "Wanderer";
+  const currentMessage = String(body.message || characterIdea || "").trim();
+  const history = Array.isArray(body.history) ? body.history.slice(-12) : [];
+
+  const openRouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+
+  if (!openRouterKey) {
+    sendJson(response, 200, {
+      message:
+        "AI guide is ready, but OPENROUTER_API_KEY is not set on the local server yet.\n\n" +
+        `Current power/class: ${characterClass}\n\n` +
+        "Once the key is set, I can ask simple questions like:\n" +
+        "1. Do you want to keep this class name?\n" +
+        "2. What kind of power should it become in this world?\n" +
+        "3. Should the concept be heroic, dark, funny, or mysterious?",
+    });
+    return;
+  }
+
+  const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${openRouterKey}`,
+      "HTTP-Referer": "http://localhost:5173",
+      "X-OpenRouter-Title": "Fog Click Character Creator",
+    },
+    body: JSON.stringify({
+      model: openRouterModel,
+      max_tokens: 180,
+      temperature: 0.8,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a concise fantasy RPG character creation guide. Help adapt the user's idea into an original D&D-style character sheet and power/class concept. If the user references an existing franchise or character, do not copy copyrighted names, exact lore, or exact powers; make an original inspired alternative. Continue the conversation using the provided history. Ask 1-3 simple next-step questions. Keep it under 120 words.",
+        },
+        {
+          role: "user",
+          content:
+            `Character idea anchor: ${characterIdea || "No idea provided"}\n` +
+            `Current power/class field: ${characterClass}\n` +
+            "Use this as persistent character context unless the player asks to change it.",
+        },
+        ...history
+          .filter((item) => item && (item.role === "user" || item.role === "assistant"))
+          .map((item) => ({
+            role: item.role,
+            content: String(item.content || "").slice(0, 1200),
+          })),
+        {
+          role: "user",
+          content: currentMessage || "Continue helping me build this character.",
+        },
+      ],
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const errorText = await aiResponse.text();
+    sendJson(response, 500, { message: `The guide failed to answer.\n${errorText.slice(0, 300)}` });
+    return;
+  }
+
+  const data = await aiResponse.json();
+  const message = data.choices?.[0]?.message?.content;
+  sendJson(response, 200, { message: message || "The guide is thinking, but returned no text." });
+}
+
+async function gameMaster(request, response) {
+  const body = await readJson(request);
+  const sheet = body.sheet || {};
+  const action = String(body.action || "").trim();
+  const history = Array.isArray(body.history) ? body.history.slice(-16) : [];
+  const openRouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+
+  if (!openRouterKey) {
+    sendJson(response, 200, {
+      message:
+        "The game master is ready, but OPENROUTER_API_KEY is not set on the local server yet. Once it is set, I can judge actions against your sheet.",
+    });
+    return;
+  }
+
+  const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${openRouterKey}`,
+      "HTTP-Referer": "http://localhost:5173",
+      "X-OpenRouter-Title": "Fog Click Character Creator",
+    },
+    body: JSON.stringify({
+      model: openRouterModel,
+      max_tokens: 420,
+      temperature: 0.75,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a solo campaign game master. Use the character sheet as hard context for what the player can do. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling or power, narrate an attempted failure clearly, for example: 'You try, but you are not strong enough.' Do not grant new powers or rewrite the sheet unless the player earns it. Keep continuity from history. Return only valid JSON with this shape: {\"message\":\"campaign narration plus 2-3 options\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"optional updated power console text or empty string\"}. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's power and scaling: a tech suit might report signatures, motion, heat, energy, or tactical threats; cursed energy sensing should report cursed energy presence and pressure; mana sensing should report mana density or nearby magic; weak senses should give vague results and strong senses should give clearer results.",
+        },
+        {
+          role: "user",
+          content: `Current character sheet JSON:\n${JSON.stringify(sheet, null, 2)}`,
+        },
+        ...history
+          .filter((item) => item && (item.role === "user" || item.role === "assistant"))
+          .map((item) => ({
+            role: item.role,
+            content: String(item.content || "").slice(0, 1400),
+          })),
+        {
+          role: "user",
+          content: action || "Begin the scene.",
+        },
+      ],
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const errorText = await aiResponse.text();
+    sendJson(response, 500, { message: `The game master failed.\n${errorText.slice(0, 300)}` });
+    return;
+  }
+
+  const data = await aiResponse.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+
+  try {
+    const parsed = JSON.parse(content);
+    sendJson(response, 200, {
+      message: parsed.message || "The world waits in silence.",
+      scan: parsed.scan || "",
+      powerBreakdown: parsed.powerBreakdown || "",
+    });
+  } catch (error) {
+    sendJson(response, 200, { message: content || "The world waits in silence.", scan: "", powerBreakdown: "" });
+  }
+}
+
+function roomSnapshot(room) {
+  return {
+    roomCode: room.code,
+    players: [...room.players.keys()],
+    requiredPlayers: room.requiredPlayers,
+    pendingCount: room.pending.size,
+    messages: room.messages,
+  };
+}
+
+function createRoomCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let index = 0; index < 5; index += 1) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return rooms.has(code) ? createRoomCode() : code;
+}
+
+async function runRoomTurn(room) {
+  const actions = [...room.pending.entries()].map(([player, action]) => `${player}: ${action}`).join("\n");
+  room.pending.clear();
+
+  const body = {
+    sheet: {
+      party: [...room.players.entries()].map(([name, player]) => ({ name, sheet: player.sheet })),
+    },
+    action: `Both players have acted this turn:\n${actions}`,
+    history: room.messages.map((message) => ({
+      role: message.speaker === "Narrator" ? "assistant" : "user",
+      content: `${message.speaker}: ${message.text}`,
+    })),
+  };
+
+  const fakeRequest = {
+    on(event, callback) {
+      if (event === "data") callback(Buffer.from(JSON.stringify(body)));
+      if (event === "end") callback();
+      return this;
+    },
+  };
+
+  let responsePayload = null;
+  const fakeResponse = {
+    writeHead() {},
+    end(payload) {
+      responsePayload = JSON.parse(payload);
+    },
+  };
+
+  await gameMaster(fakeRequest, fakeResponse);
+  room.messages.push({
+    speaker: "Narrator",
+    text: responsePayload?.message || "The world waits.",
+    scan: responsePayload?.scan || "",
+    powerBreakdown: responsePayload?.powerBreakdown || "",
+  });
+}
+
+async function scaleStats(request, response) {
+  const body = await readJson(request);
+  const openRouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+
+  if (!openRouterKey) {
+    sendJson(response, 200, {
+      message: "The stat scaler is ready, but OPENROUTER_API_KEY is not set on the local server yet.",
+    });
+    return;
+  }
+
+  const prompt =
+    `Power/class: ${String(body.power || "Unwritten")}\n` +
+    `Universe/verse: ${String(body.universe || "Original fantasy")}\n` +
+    `Fate: ${String(body.fate || "Unwritten")}\n` +
+    `Appearance: ${String(body.appearance || "Unwritten")}\n` +
+    `Character idea: ${String(body.characterIdea || "No extra idea")}\n\n` +
+    "Scale the character's base stats to the chosen universe. Use comparison language, not numbers. " +
+    "For each stat, compare to known tiers or characters from that universe if useful. " +
+    "If the user mentions a copyrighted universe, comparisons are allowed but do not write long copied lore.";
+
+  const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${openRouterKey}`,
+      "HTTP-Referer": "http://localhost:5173",
+      "X-OpenRouter-Title": "Fog Click Character Creator",
+    },
+    body: JSON.stringify({
+      model: openRouterModel,
+      max_tokens: 360,
+      temperature: 0.55,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "Return only valid JSON with this exact shape: {\"stats\":{\"strength\":\"...\",\"dexterity\":\"...\",\"constitution\":\"...\",\"intelligence\":\"...\",\"wisdom\":\"...\",\"charisma\":\"...\"}}. Each value must be one concise sentence. Stats should be comparative scaling for a story campaign, not D&D dice scores.",
+        },
+        { role: "user", content: prompt },
+      ],
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const errorText = await aiResponse.text();
+    sendJson(response, 500, { message: `The stat scaler failed.\n${errorText.slice(0, 300)}` });
+    return;
+  }
+
+  const data = await aiResponse.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+
+  try {
+    sendJson(response, 200, JSON.parse(content));
+  } catch (error) {
+    sendJson(response, 200, { message: content });
+  }
+}
+
+const server = http.createServer((request, response) => {
+  const requestUrl = new URL(request.url, `http://${request.headers.host}`);
+
+  if (!isProduction && request.url === "/__live-reload") {
+    response.writeHead(200, {
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+      Connection: "keep-alive",
+    });
+    response.write("\n");
+    clients.add(response);
+    request.on("close", () => clients.delete(response));
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/character-guide") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { message: "Method not allowed" });
+      return;
+    }
+
+    characterGuide(request, response).catch((error) => {
+      sendJson(response, 500, { message: `The guide crashed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/game-master") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { message: "Method not allowed" });
+      return;
+    }
+
+    gameMaster(request, response).catch((error) => {
+      sendJson(response, 500, { message: `The game master crashed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/scale-stats") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { message: "Method not allowed" });
+      return;
+    }
+
+    scaleStats(request, response).catch((error) => {
+      sendJson(response, 500, { message: `The stat scaler crashed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/rooms" && request.method === "POST") {
+    readJson(request)
+      .then((body) => {
+        const code = createRoomCode();
+        const playerName = String(body.playerName || "Player 1").trim();
+        const room = {
+          code,
+          requiredPlayers: 2,
+          players: new Map([[playerName, { sheet: body.sheet || {} }]]),
+          pending: new Map(),
+          messages: [{ speaker: "System", text: `Room ${code} created. Waiting for another player.` }],
+        };
+        rooms.set(code, room);
+        sendJson(response, 200, roomSnapshot(room));
+      })
+      .catch((error) => sendJson(response, 500, { error: error.message }));
+    return;
+  }
+
+  const roomMatch = requestUrl.pathname.match(/^\/api\/rooms\/([A-Z0-9]+)(?:\/(join|action))?$/);
+  if (roomMatch) {
+    const code = roomMatch[1].toUpperCase();
+    const operation = roomMatch[2] || "status";
+    const room = rooms.get(code);
+
+    if (!room) {
+      sendJson(response, 404, { error: `Room ${code} was not found.` });
+      return;
+    }
+
+    if (operation === "status" && request.method === "GET") {
+      sendJson(response, 200, roomSnapshot(room));
+      return;
+    }
+
+    if (operation === "join" && request.method === "POST") {
+      readJson(request)
+        .then((body) => {
+          const playerName = String(body.playerName || `Player ${room.players.size + 1}`).trim();
+          room.players.set(playerName, { sheet: body.sheet || {} });
+          room.messages.push({ speaker: "System", text: `${playerName} joined the campaign.` });
+          sendJson(response, 200, { ...roomSnapshot(room), message: `Joined room ${code}.` });
+        })
+        .catch((error) => sendJson(response, 500, { error: error.message }));
+      return;
+    }
+
+    if (operation === "action" && request.method === "POST") {
+      readJson(request)
+        .then(async (body) => {
+          const playerName = String(body.playerName || "Player").trim();
+          const action = String(body.action || "").trim();
+          room.players.set(playerName, { sheet: body.sheet || {} });
+          room.pending.set(playerName, action);
+          room.messages.push({ speaker: playerName, text: action });
+
+          if (room.pending.size >= Math.min(room.requiredPlayers, room.players.size)) {
+            await runRoomTurn(room);
+          }
+
+          sendJson(response, 200, {
+            ...roomSnapshot(room),
+            message:
+              room.pending.size > 0
+                ? `Waiting for ${Math.min(room.requiredPlayers, room.players.size) - room.pending.size} more player action.`
+                : "Turn resolved.",
+          });
+        })
+        .catch((error) => sendJson(response, 500, { error: error.message }));
+      return;
+    }
+
+    sendJson(response, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  const requestPath = requestUrl.pathname === "/" ? "/index.html" : requestUrl.pathname;
+  const filePath = path.join(root, decodeURIComponent(requestPath));
+  const relativePath = path.relative(root, filePath);
+
+  if (relativePath.startsWith("..") || path.isAbsolute(relativePath)) {
+    response.writeHead(403);
+    response.end("Forbidden");
+    return;
+  }
+
+  sendFile(response, filePath);
+});
+
+if (!isProduction) {
+  fs.watch(root, { recursive: true }, (eventType, filename) => {
+    if (!filename || !/\.(html|css|js|gif|png|jpe?g)$/i.test(filename)) return;
+    for (const client of clients) {
+      client.write("event: reload\ndata: now\n\n");
+    }
+  });
+}
+
+server.listen(port, host, () => {
+  console.log(`Live server running at http://${host}:${port}`);
+});

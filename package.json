@@ -1,0 +1,15 @@
+{
+  "name": "fog-click-campaign",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-assisted campaign web app with character setup, narration, audio, and multiplayer rooms.",
+  "main": "live-server.js",
+  "scripts": {
+    "start": "node live-server.js",
+    "dev": "node live-server.js",
+    "check": "node --check live-server.js"
+  },
+  "engines": {
+    "node": ">=22 <25"
+  }
+}

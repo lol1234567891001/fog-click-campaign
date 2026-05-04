@@ -1,0 +1,1796 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Click to Continue</title>
+  <style>
+    :root {
+      --cursor-x: 50vw;
+      --cursor-y: 50vh;
+      --mist: rgba(127, 29, 29, 0.82);
+      --ink: #f8fafc;
+      --shadow: rgba(6, 10, 18, 0.42);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      overflow: hidden;
+      cursor: none;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(185, 28, 28, 0.3), transparent 24rem),
+        radial-gradient(circle at 72% 18%, rgba(248, 113, 113, 0.14), transparent 20rem),
+        linear-gradient(135deg, #0f172a 0%, #111827 44%, #020617 100%);
+      color: var(--ink);
+    }
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+      background: #0b1116;
+    }
+
+    .valley {
+      position: absolute;
+      inset: -8%;
+      z-index: 0;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 900ms ease;
+      background: #0b1116;
+    }
+
+    .valley::before {
+      content: "";
+      position: absolute;
+      inset: -10%;
+      background-image: url("assets/reveal-scene.gif");
+      background-size: cover;
+      background-position: center;
+      filter: saturate(1.05) contrast(1.08) brightness(0.9);
+      transform: scale(1.1);
+      animation: valleyRide 10s ease-in-out infinite alternate;
+    }
+
+    .valley::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(250, 204, 21, 0.18), transparent 24%),
+        linear-gradient(180deg, rgba(2, 6, 23, 0.06), rgba(2, 6, 23, 0.2) 58%, rgba(2, 6, 23, 0.42));
+      mix-blend-mode: soft-light;
+      opacity: 0.74;
+      animation: goldenPulse 3.8s ease-in-out infinite alternate;
+    }
+
+    .scene::before {
+      content: "";
+      position: absolute;
+      inset: -8rem;
+      z-index: 1;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 84px 84px;
+      transform: rotate(-8deg) scale(1.15);
+      opacity: 0.55;
+    }
+
+    .scene::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      backdrop-filter: blur(10px) saturate(70%);
+      background:
+        radial-gradient(
+          circle 92px at var(--cursor-x) var(--cursor-y),
+          rgba(255, 245, 245, 0.02) 0,
+          rgba(254, 202, 202, 0.09) 42%,
+          var(--mist) 100%
+        );
+      mask-image:
+        radial-gradient(
+          circle 108px at var(--cursor-x) var(--cursor-y),
+          transparent 0 34px,
+          rgba(0, 0, 0, 0.58) 66px,
+          #000 108px
+        );
+    }
+
+    .fog {
+      position: absolute;
+      inset: -14%;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 15% 28%, rgba(248, 113, 113, 0.56), transparent 28%),
+        radial-gradient(ellipse at 76% 31%, rgba(220, 38, 38, 0.48), transparent 31%),
+        radial-gradient(ellipse at 46% 78%, rgba(153, 27, 27, 0.42), transparent 35%),
+        repeating-linear-gradient(9deg, rgba(254, 202, 202, 0.12) 0 16px, transparent 16px 42px);
+      filter: blur(28px);
+      opacity: 0.8;
+      animation: drift 16s ease-in-out infinite alternate;
+    }
+
+    .prompt {
+      position: relative;
+      z-index: 4;
+      padding: 1rem;
+      text-align: center;
+      text-shadow: 0 2px 24px var(--shadow), 0 1px 2px rgba(0, 0, 0, 0.7);
+      user-select: none;
+    }
+
+    .prompt h1 {
+      margin: 0;
+      font-size: clamp(2.1rem, 8vw, 6rem);
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: 0.95;
+    }
+
+    .prompt p {
+      margin: 1rem 0 0;
+      font-size: clamp(0.9rem, 2.2vw, 1.2rem);
+      opacity: 0.8;
+    }
+
+    .journey-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      justify-items: center;
+      padding: clamp(1rem, 4vw, 3rem);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 900ms ease 350ms, transform 900ms ease 350ms;
+    }
+
+    .journey-title {
+      align-self: start;
+      width: min(1100px, 100%);
+      margin: clamp(1.5rem, 7vh, 4.5rem) 0 0;
+      font-size: clamp(2.4rem, 7.4vw, 6.6rem);
+      font-weight: 900;
+      line-height: 0.98;
+      letter-spacing: 0;
+      text-align: center;
+      text-shadow:
+        0 3px 2px rgba(0, 0, 0, 0.82),
+        0 12px 34px rgba(0, 0, 0, 0.84),
+        0 0 26px rgba(250, 204, 21, 0.28);
+      user-select: none;
+    }
+
+    .start-button {
+      align-self: end;
+      min-width: min(280px, 78vw);
+      margin-bottom: clamp(1.5rem, 8vh, 5rem);
+      padding: 0.95rem 2.4rem;
+      border: 2px solid transparent;
+      background: rgba(0, 0, 0, 0.12);
+      color: #fff;
+      font: inherit;
+      font-size: clamp(1.25rem, 3vw, 2rem);
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      cursor: none;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+      transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+    }
+
+    .start-button:hover,
+    .start-button:focus-visible {
+      border-color: #fff;
+      background: rgba(0, 0, 0, 0.32);
+      outline: none;
+      transform: translateY(-2px);
+    }
+
+    .character-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      display: block;
+      padding: clamp(0.7rem, 2vw, 1.3rem);
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(1.02);
+      transition: opacity 650ms ease, transform 650ms ease;
+    }
+
+    .play-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 7;
+      display: block;
+      padding: clamp(0.7rem, 2vw, 1.3rem);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 650ms ease, transform 650ms ease;
+    }
+
+    .game-layout {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 0.8rem;
+    }
+
+    .top-panels {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(280px, 0.72fr) minmax(360px, 1.48fr);
+      gap: 0.8rem;
+    }
+
+    .play-layout {
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
+      gap: 0.8rem;
+    }
+
+    .play-top {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(300px, 0.72fr) minmax(420px, 1.55fr);
+      gap: 0.8rem;
+    }
+
+    .hud-panel {
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      background:
+        linear-gradient(rgba(16, 12, 7, 0.88), rgba(9, 7, 5, 0.9)),
+        radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.12), transparent 38%);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.72), inset 0 0 0 1px rgba(250, 204, 21, 0.18);
+      padding: clamp(1rem, 3vw, 2rem);
+      color: #fff7ed;
+    }
+
+    .character-sheet {
+      min-height: 0;
+      overflow: auto;
+      padding: clamp(0.8rem, 1.6vw, 1.2rem);
+    }
+
+    .character-header {
+      display: grid;
+      gap: 0.9rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+      padding-bottom: 1rem;
+    }
+
+    .character-header h2 {
+      margin: 0;
+      font-size: clamp(1.6rem, 3vw, 3rem);
+      line-height: 0.95;
+      font-weight: 900;
+      letter-spacing: 0;
+      text-shadow: 0 3px 18px rgba(0, 0, 0, 0.85);
+    }
+
+    .continue-button {
+      width: 100%;
+      margin-top: 0.9rem;
+      min-height: 52px;
+      border: 2px solid rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      padding: 0.8rem 1rem;
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+      text-transform: uppercase;
+    }
+
+    .console-panel {
+      min-height: 0;
+      overflow: auto;
+      padding: clamp(0.8rem, 1.6vw, 1.2rem);
+    }
+
+    .console-section {
+      margin-top: 1rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .console-section:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .console-section h3 {
+      margin: 0 0 0.65rem;
+      color: #fed7aa;
+      font-size: 1rem;
+      text-transform: uppercase;
+    }
+
+    .power-breakdown,
+    .scan-output {
+      min-height: 76px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(0, 0, 0, 0.24);
+      padding: 0.75rem;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+
+    .console-stat {
+      margin: 0 0 0.7rem;
+      line-height: 1.25;
+    }
+
+    .console-stat strong {
+      color: #fed7aa;
+      text-transform: capitalize;
+    }
+
+    .continue-button:hover,
+    .continue-button:focus-visible {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+      outline: none;
+    }
+
+    .randomize-button,
+    .scale-button {
+      flex: 0 0 auto;
+      min-height: 48px;
+      border: 2px solid rgba(255, 255, 255, 0.78);
+      background: rgba(250, 204, 21, 0.12);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      font: inherit;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      cursor: none;
+      text-transform: uppercase;
+      transition: background 160ms ease, transform 160ms ease, border-color 160ms ease;
+    }
+
+    .randomize-button:hover,
+    .randomize-button:focus-visible,
+    .scale-button:hover,
+    .scale-button:focus-visible {
+      border-color: #fff;
+      background: rgba(250, 204, 21, 0.24);
+      outline: none;
+      transform: translateY(-2px);
+    }
+
+    .character-body {
+      margin-top: 1.5rem;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.8rem;
+    }
+
+    .stat-card {
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.08);
+      padding: 0.72rem;
+      min-height: 112px;
+    }
+
+    .stat-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+
+    .stat-name {
+      margin: 0;
+      font-size: 0.9rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+      color: #fed7aa;
+    }
+
+    .stat-randomize {
+      border: 1px solid rgba(255, 255, 255, 0.56);
+      background: rgba(0, 0, 0, 0.18);
+      color: #fff;
+      padding: 0.42rem 0.55rem;
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0;
+      cursor: none;
+      text-transform: uppercase;
+    }
+
+    .stat-randomize:hover,
+    .stat-randomize:focus-visible {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.14);
+      outline: none;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 0.7rem;
+      margin-top: 0.35rem;
+    }
+
+    .scale-text {
+      display: block;
+      margin-top: 0.55rem;
+      color: #fff7ed;
+      line-height: 1.25;
+      font-size: 0.9rem;
+      opacity: 0.92;
+    }
+
+    .stat-value {
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 900;
+      line-height: 0.9;
+    }
+
+    .stat-mod {
+      min-width: 58px;
+      border: 1px solid rgba(255, 255, 255, 0.32);
+      padding: 0.35rem 0.5rem;
+      text-align: center;
+      font-weight: 800;
+      background: rgba(0, 0, 0, 0.24);
+    }
+
+    .sheet-details {
+      margin-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding-top: 0.6rem;
+    }
+
+    .sheet-details h3,
+    .ai-chat h3,
+    .game-master h3,
+    .action-bar h3 {
+      margin: 0 0 0.8rem;
+      font-size: clamp(1.3rem, 3vw, 2rem);
+      line-height: 1;
+    }
+
+    .detail-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+      padding: 0.65rem 0;
+      font-size: 1rem;
+    }
+
+    .detail-line strong {
+      color: #fed7aa;
+      font-weight: 800;
+    }
+
+    .detail-line input {
+      width: min(190px, 48vw);
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: rgba(0, 0, 0, 0.26);
+      color: #fff;
+      padding: 0.45rem 0.55rem;
+      font: inherit;
+      text-align: right;
+    }
+
+    .sheet-textarea {
+      width: 100%;
+      min-height: 70px;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: rgba(0, 0, 0, 0.26);
+      color: #fff;
+      padding: 0.55rem;
+      font: inherit;
+      resize: vertical;
+    }
+
+    .sheet-textarea:focus {
+      border-color: #fff;
+      outline: none;
+    }
+
+    .detail-line input:focus {
+      border-color: #fff;
+      outline: none;
+    }
+
+    .ai-chat {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      padding: clamp(0.8rem, 1.8vw, 1.4rem);
+    }
+
+    .ai-chat label {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: #fed7aa;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 0.8rem;
+    }
+
+    .idea-input,
+    .reply-input {
+      width: 100%;
+      resize: vertical;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: rgba(0, 0, 0, 0.26);
+      color: #fff;
+      padding: 0.7rem;
+      font: inherit;
+    }
+
+    .idea-input {
+      min-height: 64px;
+    }
+
+    .reply-input {
+      min-height: 74px;
+      margin-top: 0.7rem;
+    }
+
+    .idea-input:focus,
+    .reply-input:focus {
+      border-color: #fff;
+      outline: none;
+    }
+
+    .chat-log {
+      min-height: 0;
+      overflow: auto;
+      margin-top: 0.8rem;
+      padding: 0.8rem;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(0, 0, 0, 0.22);
+      line-height: 1.35;
+    }
+
+    .game-master {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      padding: clamp(0.8rem, 1.8vw, 1.4rem);
+    }
+
+    .audio-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+
+    .audio-button,
+    .audio-toggle,
+    .voice-select,
+    .rate-control {
+      min-height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      padding: 0.55rem 0.8rem;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .audio-button,
+    .audio-toggle,
+    .voice-select,
+    .rate-control {
+      cursor: none;
+    }
+
+    .audio-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .voice-select {
+      max-width: min(320px, 100%);
+      background-color: rgba(12, 10, 8, 0.96);
+      color: #fff7ed;
+    }
+
+    .voice-select option {
+      background: #120f0b;
+      color: #fff7ed;
+    }
+
+    .rate-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 800;
+    }
+
+    .rate-control {
+      width: 140px;
+      padding: 0;
+      accent-color: #facc15;
+    }
+
+    .audio-button:hover,
+    .audio-button:focus-visible,
+    .audio-toggle:hover,
+    .audio-toggle:focus-within,
+    .voice-select:hover,
+    .voice-select:focus-visible,
+    .rate-control:hover,
+    .rate-control:focus-visible {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+      outline: none;
+    }
+
+    .audio-toggle input {
+      width: 18px;
+      height: 18px;
+      accent-color: #facc15;
+    }
+
+    .room-controls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, auto));
+      gap: 0.55rem;
+      align-items: center;
+      margin-bottom: 0.8rem;
+    }
+
+    .room-input {
+      min-height: 42px;
+      min-width: 120px;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      background: rgba(0, 0, 0, 0.26);
+      color: #fff;
+      padding: 0.55rem 0.7rem;
+      font: inherit;
+    }
+
+    .room-status {
+      grid-column: 1 / -1;
+      color: #fed7aa;
+      min-height: 1.2rem;
+    }
+
+    .room-badge {
+      position: absolute;
+      top: 0.7rem;
+      right: 0.7rem;
+      z-index: 9;
+      display: none;
+      border: 1px solid rgba(255, 255, 255, 0.58);
+      background: rgba(0, 0, 0, 0.58);
+      color: #fff7ed;
+      padding: 0.45rem 0.65rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+    }
+
+    body.has-room .room-controls {
+      display: none;
+    }
+
+    body.has-room .room-badge {
+      display: block;
+    }
+
+    .back-button {
+      position: fixed;
+      top: 0.7rem;
+      left: 0.7rem;
+      z-index: 20;
+      display: none;
+      border: 1px solid rgba(255, 255, 255, 0.64);
+      background: rgba(0, 0, 0, 0.58);
+      color: #fff7ed;
+      padding: 0.5rem 0.75rem;
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+      text-transform: uppercase;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+    }
+
+    .back-button:hover,
+    .back-button:focus-visible {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+      outline: none;
+    }
+
+    body.has-continued .back-button {
+      display: block;
+    }
+
+    .game-input {
+      width: 100%;
+      min-height: 76px;
+      resize: vertical;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: rgba(0, 0, 0, 0.26);
+      color: #fff;
+      padding: 0.7rem;
+      font: inherit;
+    }
+
+    .game-input:focus {
+      border-color: #fff;
+      outline: none;
+    }
+
+    .game-controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.7rem;
+      align-items: end;
+      margin-top: 0.7rem;
+    }
+
+    .chat-message {
+      margin: 0 0 0.75rem;
+      white-space: pre-wrap;
+    }
+
+    .chat-message strong {
+      color: #fed7aa;
+    }
+
+    .chat-controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.7rem;
+      align-items: end;
+    }
+
+    .ai-button {
+      margin-top: 0.7rem;
+      border: 2px solid rgba(255, 255, 255, 0.7);
+      background: rgba(250, 204, 21, 0.12);
+      color: #fff;
+      padding: 0.75rem 1rem;
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+      text-transform: uppercase;
+    }
+
+    .ai-button:hover,
+    .ai-button:focus-visible {
+      border-color: #fff;
+      background: rgba(250, 204, 21, 0.24);
+      outline: none;
+    }
+
+    .action-bar {
+      min-height: 152px;
+      padding: clamp(0.8rem, 1.8vw, 1.3rem);
+    }
+
+    .action-options {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+
+    .action-option {
+      min-height: 72px;
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+      text-transform: uppercase;
+    }
+
+    .action-option:hover,
+    .action-option:focus-visible {
+      border-color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+      outline: none;
+    }
+
+    @media (max-width: 760px) {
+      .top-panels,
+      .chat-controls,
+      .action-options {
+        grid-template-columns: 1fr;
+      }
+
+      .game-layout {
+        overflow: auto;
+      }
+    }
+
+    .cursor-glow,
+    .cursor-dot {
+      position: fixed;
+      left: var(--cursor-x);
+      top: var(--cursor-y);
+      z-index: 10;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      border-radius: 999px;
+    }
+
+    .cursor-glow {
+      width: 68px;
+      height: 68px;
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.18), rgba(248, 113, 113, 0.16) 38%, transparent 70%);
+      box-shadow: 0 0 26px rgba(248, 113, 113, 0.46);
+      transition: width 120ms ease, height 120ms ease;
+    }
+
+    .cursor-dot {
+      width: 8px;
+      height: 8px;
+      background: #ffffff;
+      box-shadow: 0 0 16px rgba(255, 255, 255, 0.9);
+    }
+
+    body.is-pressing .cursor-glow {
+      width: 52px;
+      height: 52px;
+    }
+
+    body.has-continued .scene::after,
+    body.has-continued .fog,
+    body.has-continued .prompt {
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 700ms ease;
+    }
+
+    body.has-continued .scene::before {
+      opacity: 0;
+      transition: opacity 700ms ease;
+    }
+
+    body.has-continued .valley {
+      opacity: 1;
+    }
+
+    body.has-continued .journey-ui {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    body.has-started .journey-ui {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-12px);
+      transition-delay: 0ms;
+    }
+
+    body.has-started .valley::before {
+      filter: saturate(0.9) contrast(1.12) brightness(0.55);
+      transform: scale(1.18);
+      animation-play-state: paused;
+    }
+
+    body.has-started .character-screen {
+      opacity: 1;
+      pointer-events: auto;
+      transform: scale(1);
+    }
+
+    body.is-playing .character-screen {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98);
+    }
+
+    body.is-playing .play-screen {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    @keyframes drift {
+      from {
+        transform: translate3d(-2%, -1%, 0) rotate(0deg);
+      }
+
+      to {
+        transform: translate3d(2%, 1.5%, 0) rotate(2deg);
+      }
+    }
+
+    @keyframes valleyRide {
+      from {
+        transform: scale(1.18) translate3d(-2.4%, -1%, 0);
+      }
+
+      to {
+        transform: scale(1.32) translate3d(2.4%, 1.8%, 0);
+      }
+    }
+
+    @keyframes goldenPulse {
+      from {
+        opacity: 0.48;
+      }
+
+      to {
+        opacity: 0.82;
+      }
+    }
+  </style>
+</head>
+<body>
+  <button class="back-button" type="button">Back</button>
+  <main class="scene" aria-label="Fogged screen">
+    <div class="valley" aria-hidden="true"></div>
+    <div class="fog"></div>
+    <section class="prompt">
+      <h1>Click to continue</h1>
+      <p>Move your cursor through the fog.</p>
+    </section>
+    <section class="journey-ui" aria-label="Journey start">
+      <h2 class="journey-title">Are you ready to start your journey?</h2>
+      <button class="start-button" type="button">Start</button>
+    </section>
+    <section class="character-screen" aria-label="Create your character">
+      <div class="game-layout">
+        <div class="top-panels">
+          <section class="hud-panel character-sheet">
+            <header class="character-header">
+              <h2>Character Sheet</h2>
+              <button class="scale-button" type="button">Scale Stats</button>
+            </header>
+            <div class="sheet-details">
+              <h3>Player</h3>
+              <div class="detail-line">
+                <strong>Power</strong>
+                <input class="class-input" type="text" value="Wanderer" aria-label="Power or class">
+              </div>
+              <div class="detail-line">
+                <strong>Universe</strong>
+                <input class="universe-input" type="text" value="Original fantasy" aria-label="Universe">
+              </div>
+              <div class="detail-line">
+                <strong>Fate</strong>
+                <input class="fate-input" type="text" value="Unwritten" aria-label="Fate">
+              </div>
+              <label for="appearanceInput" class="stat-name">Appearance</label>
+              <textarea class="sheet-textarea appearance-input" id="appearanceInput" placeholder="Example: 6'5, black hair, blue eyes"></textarea>
+              <button class="continue-button" type="button">Continue</button>
+            </div>
+            <div class="character-body">
+              <div class="stat-grid">
+                <article class="stat-card" data-stat="strength">
+                  <div class="stat-top">
+                    <p class="stat-name">Strength</p>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-value">Unscaled</span>
+                  </div>
+                  <span class="scale-text">Ask the AI to compare this to the chosen universe.</span>
+                </article>
+                <article class="stat-card" data-stat="dexterity">
+                  <div class="stat-top">
+                    <p class="stat-name">Dexterity</p>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-value">Unscaled</span>
+                  </div>
+                  <span class="scale-text">Ask the AI to compare this to the chosen universe.</span>
+                </article>
+                <article class="stat-card" data-stat="constitution">
+                  <div class="stat-top">
+                    <p class="stat-name">Constitution</p>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-value">Unscaled</span>
+                  </div>
+                  <span class="scale-text">Ask the AI to compare this to the chosen universe.</span>
+                </article>
+                <article class="stat-card" data-stat="intelligence">
+                  <div class="stat-top">
+                    <p class="stat-name">Intelligence</p>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-value">Unscaled</span>
+                  </div>
+                  <span class="scale-text">Ask the AI to compare this to the chosen universe.</span>
+                </article>
+                <article class="stat-card" data-stat="wisdom">
+                  <div class="stat-top">
+                    <p class="stat-name">Wisdom</p>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-value">Unscaled</span>
+                  </div>
+                  <span class="scale-text">Ask the AI to compare this to the chosen universe.</span>
+                </article>
+                <article class="stat-card" data-stat="charisma">
+                  <div class="stat-top">
+                    <p class="stat-name">Charisma</p>
+                  </div>
+                  <div class="stat-row">
+                    <span class="stat-value">Unscaled</span>
+                  </div>
+                  <span class="scale-text">Ask the AI to compare this to the chosen universe.</span>
+                </article>
+              </div>
+            </div>
+          </section>
+          <section class="hud-panel ai-chat">
+            <h3>Guide</h3>
+            <label for="characterIdea">Character idea</label>
+            <textarea class="idea-input" id="characterIdea" placeholder="Example: Tech Jacket from Invincible, but make it fit this world."></textarea>
+            <div class="chat-log" aria-live="polite">
+              <p class="chat-message"><strong>Guide:</strong> Describe the hero once, then respond here like a normal chat. I will keep the conversation while this page stays open.</p>
+            </div>
+            <div class="chat-controls">
+              <textarea class="reply-input" placeholder="Reply to the guide..."></textarea>
+              <button class="ai-button" type="button">Send</button>
+            </div>
+          </section>
+        </div>
+        </div>
+      </div>
+    </section>
+    <section class="play-screen" aria-label="Adventure">
+      <div class="room-badge">Room <span class="room-badge-code">-----</span></div>
+      <div class="play-layout">
+        <div class="play-top">
+          <aside class="hud-panel console-panel">
+            <header class="character-header">
+              <h2>Game Console</h2>
+            </header>
+            <section class="console-section">
+              <h3>Core</h3>
+              <div class="detail-line"><strong>Power</strong><span class="play-power">Wanderer</span></div>
+              <div class="detail-line"><strong>Fate</strong><span class="play-fate">Unwritten</span></div>
+            </section>
+            <section class="console-section">
+              <h3>Power Breakdown</h3>
+              <div class="power-breakdown">Your power details will appear here when the campaign starts.</div>
+            </section>
+            <section class="console-section">
+              <h3>Scaling</h3>
+              <div class="play-stat-grid"></div>
+            </section>
+            <section class="console-section">
+              <h3>Scan</h3>
+              <div class="scan-output">No sense data yet. Use your power to scan, sense, track, or detect something in the scene.</div>
+            </section>
+          </aside>
+          <section class="hud-panel game-master">
+            <h3>Adventure</h3>
+            <div class="room-controls" aria-label="Multiplayer room controls">
+              <input class="room-input player-name-input" type="text" placeholder="Your name" aria-label="Your player name">
+              <input class="room-input room-code-input" type="text" placeholder="Room code" aria-label="Room code">
+              <button class="audio-button create-room" type="button">Create Room</button>
+              <button class="audio-button join-room" type="button">Join Room</button>
+              <div class="room-status">Solo mode. Create or join a room to wait for both players.</div>
+            </div>
+            <div class="audio-controls" aria-label="Audio narration controls">
+              <button class="audio-button read-latest" type="button">Read Latest</button>
+              <button class="audio-button stop-reading" type="button">Stop</button>
+              <select class="voice-select" aria-label="Narration voice">
+                <option value="">Default voice</option>
+              </select>
+              <label class="rate-wrap">
+                Speed
+                <input class="rate-control" type="range" min="0.65" max="1.35" step="0.05" value="0.92" aria-label="Narration speed">
+              </label>
+              <label class="audio-toggle">
+                <input class="auto-read-toggle" type="checkbox">
+                Auto-read
+              </label>
+            </div>
+            <div class="chat-log game-log" aria-live="polite">
+              <p class="chat-message"><strong>Narrator:</strong> Your journey begins. Type what you try to do, and the world will judge it against your sheet.</p>
+            </div>
+            <div class="game-controls">
+              <textarea class="game-input" placeholder="What do you do?"></textarea>
+              <button class="ai-button game-send" type="button">Do It</button>
+            </div>
+          </section>
+        </div>
+        <section class="hud-panel action-bar">
+          <h3>Actions</h3>
+          <div class="action-options">
+            <button class="action-option" type="button" data-action="Use my power to sense the area.">Sense</button>
+            <button class="action-option" type="button" data-action="Train my abilities for a while.">Train</button>
+            <button class="action-option" type="button" data-action="Rest and recover.">Rest</button>
+            <button class="action-option" type="button" data-action="Continue forward into the next scene.">Continue</button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </main>
+  <div class="cursor-glow" aria-hidden="true"></div>
+  <div class="cursor-dot" aria-hidden="true"></div>
+
+  <script>
+    const root = document.documentElement;
+    let introAudioContext = null;
+    let introMusicNodes = [];
+    let introMusicTimer = null;
+    let introMusicStarted = false;
+    let clickAudioContext = null;
+
+    function setCursorPosition(x, y) {
+      root.style.setProperty("--cursor-x", `${x}px`);
+      root.style.setProperty("--cursor-y", `${y}px`);
+    }
+
+    function startIntroMusic() {
+      if (introMusicStarted) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+
+      introMusicStarted = true;
+      introAudioContext = new AudioContext();
+      const master = introAudioContext.createGain();
+      master.gain.setValueAtTime(0.0001, introAudioContext.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.12, introAudioContext.currentTime + 1.2);
+      master.connect(introAudioContext.destination);
+      introMusicNodes.push(master);
+
+      const notes = [146.83, 196.0, 220.0, 293.66];
+
+      notes.forEach((frequency, index) => {
+        const oscillator = introAudioContext.createOscillator();
+        const gain = introAudioContext.createGain();
+        oscillator.type = index % 2 ? "triangle" : "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.value = 0.025;
+        oscillator.connect(gain);
+        gain.connect(master);
+        oscillator.start();
+        introMusicNodes.push(oscillator, gain);
+      });
+
+      introMusicTimer = setInterval(() => {
+        if (!introAudioContext) return;
+        const now = introAudioContext.currentTime;
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.linearRampToValueAtTime(0.17, now + 1.4);
+        master.gain.linearRampToValueAtTime(0.1, now + 3.2);
+      }, 3200);
+    }
+
+    function stopIntroMusic() {
+      if (!introAudioContext) return;
+      clearInterval(introMusicTimer);
+      const now = introAudioContext.currentTime;
+      const master = introMusicNodes[0];
+      if (master?.gain) {
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+      }
+
+      setTimeout(() => {
+        introMusicNodes.forEach((node) => {
+          if (typeof node.stop === "function") {
+            try { node.stop(); } catch (error) {}
+          }
+        });
+        introAudioContext.close();
+        introAudioContext = null;
+        introMusicNodes = [];
+        introMusicStarted = false;
+      }, 900);
+    }
+
+    function playButtonSound() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+
+      if (!clickAudioContext) {
+        clickAudioContext = new AudioContext();
+      }
+
+      const now = clickAudioContext.currentTime;
+      const master = clickAudioContext.createGain();
+      const delay = clickAudioContext.createDelay();
+      const feedback = clickAudioContext.createGain();
+      const filter = clickAudioContext.createBiquadFilter();
+      const notes = [523.25, 659.25, 783.99];
+
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.16, now + 0.018);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
+
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(2600, now);
+      delay.delayTime.value = 0.085;
+      feedback.gain.value = 0.18;
+
+      filter.connect(master);
+      master.connect(clickAudioContext.destination);
+      filter.connect(delay);
+      delay.connect(feedback);
+      feedback.connect(delay);
+      delay.connect(master);
+
+      notes.forEach((frequency, index) => {
+        const oscillator = clickAudioContext.createOscillator();
+        const gain = clickAudioContext.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(frequency, now + index * 0.035);
+        gain.gain.setValueAtTime(0.0001, now + index * 0.035);
+        gain.gain.exponentialRampToValueAtTime(0.08, now + index * 0.035 + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.42 + index * 0.04);
+        oscillator.connect(gain);
+        gain.connect(filter);
+        oscillator.start(now + index * 0.035);
+        oscillator.stop(now + 0.8);
+      });
+    }
+
+    function goBackOneScreen() {
+      if (document.body.classList.contains("is-playing")) {
+        document.body.classList.remove("is-playing");
+      } else if (document.body.classList.contains("has-started")) {
+        document.body.classList.remove("has-started");
+        stopIntroMusic();
+      } else if (document.body.classList.contains("has-continued")) {
+        document.body.classList.remove("has-continued");
+        stopIntroMusic();
+      }
+      saveState();
+    }
+
+    window.addEventListener("pointermove", (event) => {
+      setCursorPosition(event.clientX, event.clientY);
+    });
+
+    window.addEventListener("pointerdown", () => {
+      document.body.classList.add("is-pressing");
+    });
+
+    window.addEventListener("pointerup", () => {
+      document.body.classList.remove("is-pressing");
+      document.body.classList.add("has-continued");
+      startIntroMusic();
+    });
+
+    document.querySelector(".start-button").addEventListener("click", (event) => {
+      event.stopPropagation();
+      stopIntroMusic();
+      document.body.classList.add("has-started");
+      saveState();
+    });
+
+    document.querySelector(".back-button").addEventListener("click", goBackOneScreen);
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("button")) {
+        playButtonSound();
+      }
+    }, true);
+
+    const statCards = document.querySelectorAll(".stat-card");
+
+    function titleCase(value) {
+      return value.slice(0, 1).toUpperCase() + value.slice(1);
+    }
+
+    function setScaledStat(statName, value) {
+      const card = document.querySelector(`.stat-card[data-stat="${statName}"]`);
+      if (!card) return;
+      card.querySelector(".stat-value").textContent = "Scaled";
+      card.querySelector(".scale-text").textContent = value || "No comparison yet.";
+      saveState();
+    }
+
+    const chatHistory = [];
+    const chatLog = document.querySelector(".chat-log");
+    const ideaInput = document.querySelector("#characterIdea");
+    const replyInput = document.querySelector(".reply-input");
+    const saveKey = "fogClickCampaignSave";
+    let currentRoom = "";
+    let currentPlayer = "";
+    let lastRoomMessageCount = 0;
+
+    function getStatScaling() {
+      const stats = {};
+      statCards.forEach((card) => {
+        stats[card.dataset.stat] = card.querySelector(".scale-text").textContent;
+      });
+      return stats;
+    }
+
+    function saveState() {
+      const state = {
+        stage: document.body.classList.contains("is-playing") ? "playing" : document.body.classList.contains("has-started") ? "setup" : document.body.classList.contains("has-continued") ? "journey" : "fog",
+        power: document.querySelector(".class-input").value,
+        universe: document.querySelector(".universe-input").value,
+        fate: document.querySelector(".fate-input").value,
+        appearance: document.querySelector(".appearance-input").value,
+        idea: ideaInput.value,
+        stats: getStatScaling(),
+        chatHistory,
+        gameHistory,
+        latestNarration,
+        powerBreakdown: document.querySelector(".power-breakdown")?.textContent || "",
+        scan: document.querySelector(".scan-output")?.textContent || "",
+        room: currentRoom,
+        player: currentPlayer,
+      };
+      localStorage.setItem(saveKey, JSON.stringify(state));
+    }
+
+    function restoreMessages(container, messages, speakerMap) {
+      messages.forEach((message) => {
+        appendMessage(container, speakerMap[message.role] || message.role, message.content);
+      });
+    }
+
+    function addChatMessage(speaker, text) {
+      const message = document.createElement("p");
+      message.className = "chat-message";
+      message.innerHTML = `<strong>${speaker}:</strong> ${text.replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      }[char]))}`;
+      chatLog.append(message);
+      chatLog.scrollTop = chatLog.scrollHeight;
+      saveState();
+    }
+
+    function appendMessage(container, speaker, text) {
+      const message = document.createElement("p");
+      message.className = "chat-message";
+      message.innerHTML = `<strong>${speaker}:</strong> ${text.replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;",
+      }[char]))}`;
+      container.append(message);
+      container.scrollTop = container.scrollHeight;
+      saveState();
+      return message;
+    }
+
+    function getCharacterSheet() {
+      const stats = {};
+      statCards.forEach((card) => {
+        const name = card.dataset.stat;
+        stats[name] = card.querySelector(".scale-text").textContent;
+      });
+
+      return {
+        power: document.querySelector(".class-input").value || "Wanderer",
+        universe: document.querySelector(".universe-input").value || "Original fantasy",
+        fate: document.querySelector(".fate-input").value || "Unwritten",
+        appearance: document.querySelector(".appearance-input").value || "Unwritten",
+        idea: ideaInput.value || "Unwritten",
+        stats,
+      };
+    }
+
+    function renderPlaySheet() {
+      const sheet = getCharacterSheet();
+      document.querySelector(".play-power").textContent = sheet.power;
+      document.querySelector(".play-fate").textContent = sheet.fate;
+      document.querySelector(".power-breakdown").textContent =
+        `Power: ${sheet.power}\n` +
+        `Universe: ${sheet.universe}\n` +
+        `Appearance: ${sheet.appearance}\n\n` +
+        `Notes: ${sheet.idea || "No extra character notes yet."}`;
+      const grid = document.querySelector(".play-stat-grid");
+      grid.innerHTML = "";
+
+      Object.entries(sheet.stats).forEach(([name, value]) => {
+        const line = document.createElement("p");
+        line.className = "console-stat";
+        line.innerHTML = `<strong>${titleCase(name)}:</strong> ${value}`;
+        grid.append(line);
+      });
+    }
+
+    document.querySelector(".ai-button").addEventListener("click", async () => {
+      const reply = replyInput.value.trim();
+      const initialIdea = ideaInput.value.trim();
+      const payload = {
+        characterIdea: initialIdea,
+        characterClass: document.querySelector(".class-input").value,
+        message: reply || initialIdea,
+        history: chatHistory,
+      };
+
+      if (!payload.message) return;
+
+      addChatMessage("You", payload.message);
+      chatHistory.push({ role: "user", content: payload.message });
+      replyInput.value = "";
+      addChatMessage("Guide", "Thinking...");
+      const thinkingMessage = chatLog.lastElementChild;
+
+      try {
+        const response = await fetch("/api/character-guide", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        const data = await response.json();
+        const guideMessage = data.message || "The guide is silent.";
+        thinkingMessage.remove();
+        addChatMessage("Guide", guideMessage);
+        chatHistory.push({ role: "assistant", content: guideMessage });
+      } catch (error) {
+        thinkingMessage.remove();
+        addChatMessage("Guide", "The guide could not answer. Check the local server.");
+      }
+    });
+
+    document.querySelector(".scale-button").addEventListener("click", async () => {
+      const button = document.querySelector(".scale-button");
+      button.textContent = "Scaling...";
+      button.disabled = true;
+
+      try {
+        const response = await fetch("/api/scale-stats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            power: document.querySelector(".class-input").value,
+            universe: document.querySelector(".universe-input").value,
+            fate: document.querySelector(".fate-input").value,
+            appearance: document.querySelector(".appearance-input").value,
+            characterIdea: ideaInput.value,
+          }),
+        });
+        const data = await response.json();
+
+        if (data.stats) {
+          Object.entries(data.stats).forEach(([name, value]) => setScaledStat(name, value));
+        } else {
+          addChatMessage("Guide", data.message || "I could not scale the stats.");
+        }
+      } catch (error) {
+        addChatMessage("Guide", "The scaler could not answer. Check the local server.");
+      } finally {
+        button.textContent = "Scale Stats";
+        button.disabled = false;
+      }
+    });
+
+    const gameHistory = [];
+    const gameLog = document.querySelector(".game-log");
+    const gameInput = document.querySelector(".game-input");
+    const voiceSelect = document.querySelector(".voice-select");
+    const rateControl = document.querySelector(".rate-control");
+    const roomStatus = document.querySelector(".room-status");
+    const roomCodeInput = document.querySelector(".room-code-input");
+    const playerNameInput = document.querySelector(".player-name-input");
+    let latestNarration = "Your journey begins. Type what you try to do, and the world will judge it against your sheet.";
+
+    function cleanSpeechText(text) {
+      return text.replace(/\s+/g, " ").replace(/\*\*/g, "").trim();
+    }
+
+    function speakText(text) {
+      if (!("speechSynthesis" in window)) {
+        appendMessage(gameLog, "Narrator", "Audio reading is not supported in this browser.");
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(cleanSpeechText(text));
+      const voices = window.speechSynthesis.getVoices();
+      const selectedVoice = voices.find((voice) => voice.name === voiceSelect.value);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+      }
+      utterance.rate = Number(rateControl.value);
+      utterance.pitch = 0.96;
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function loadVoices() {
+      if (!("speechSynthesis" in window)) return;
+      const voices = window.speechSynthesis.getVoices();
+      const currentValue = voiceSelect.value;
+      voiceSelect.innerHTML = '<option value="">Default voice</option>';
+
+      voices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = `${voice.name} (${voice.lang})`;
+        voiceSelect.append(option);
+      });
+
+      if ([...voiceSelect.options].some((option) => option.value === currentValue)) {
+        voiceSelect.value = currentValue;
+      }
+    }
+
+    loadVoices();
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
+    }
+
+    document.querySelector(".continue-button").addEventListener("click", () => {
+      renderPlaySheet();
+      document.body.classList.add("is-playing");
+      saveState();
+      if (document.querySelector(".auto-read-toggle").checked) {
+        speakText(latestNarration);
+      }
+    });
+
+    async function sendGameAction(actionText) {
+      const action = actionText.trim();
+      if (!action) return;
+
+      if (currentRoom) {
+        await submitRoomAction(action);
+        return;
+      }
+
+      appendMessage(gameLog, "You", action);
+      gameHistory.push({ role: "user", content: action });
+      gameInput.value = "";
+      const thinking = appendMessage(gameLog, "Narrator", "Judging the action...");
+
+      try {
+        const response = await fetch("/api/game-master", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sheet: getCharacterSheet(),
+            action,
+            history: gameHistory,
+          }),
+        });
+        const data = await response.json();
+        const result = data.message || "Nothing happens.";
+        thinking.remove();
+        appendMessage(gameLog, "Narrator", result);
+        latestNarration = result;
+        if (document.querySelector(".auto-read-toggle").checked) {
+          speakText(result);
+        }
+        if (data.scan) {
+          document.querySelector(".scan-output").textContent = data.scan;
+        }
+        if (data.powerBreakdown) {
+          document.querySelector(".power-breakdown").textContent = data.powerBreakdown;
+        }
+        gameHistory.push({ role: "assistant", content: result });
+        saveState();
+      } catch (error) {
+        thinking.remove();
+        appendMessage(gameLog, "Narrator", "The world could not answer. Check the local server.");
+      }
+    }
+
+    document.querySelector(".game-send").addEventListener("click", () => {
+      sendGameAction(gameInput.value);
+    });
+
+    document.querySelector(".read-latest").addEventListener("click", () => {
+      speakText(latestNarration);
+    });
+
+    document.querySelector(".stop-reading").addEventListener("click", () => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+    });
+
+    document.querySelectorAll(".action-option").forEach((button) => {
+      button.addEventListener("click", () => sendGameAction(button.dataset.action || button.textContent));
+    });
+
+    function setRoomStatus(text) {
+      roomStatus.textContent = text;
+      if (currentRoom) {
+        document.body.classList.add("has-room");
+        document.querySelector(".room-badge-code").textContent = currentRoom;
+      } else {
+        document.body.classList.remove("has-room");
+        document.querySelector(".room-badge-code").textContent = "-----";
+      }
+      saveState();
+    }
+
+    async function createRoom() {
+      currentPlayer = playerNameInput.value.trim() || "Player 1";
+      const response = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerName: currentPlayer, sheet: getCharacterSheet() }),
+      });
+      const data = await response.json();
+      currentRoom = data.roomCode;
+      roomCodeInput.value = currentRoom;
+      document.querySelector(".room-badge-code").textContent = currentRoom;
+      document.body.classList.add("has-room");
+      lastRoomMessageCount = 0;
+      setRoomStatus(`Room ${currentRoom} created. Other player joins this code.`);
+      saveState();
+    }
+
+    async function joinRoom() {
+      currentRoom = roomCodeInput.value.trim().toUpperCase();
+      currentPlayer = playerNameInput.value.trim() || "Player 2";
+      if (!currentRoom) return;
+      document.querySelector(".room-badge-code").textContent = currentRoom;
+      document.body.classList.add("has-room");
+
+      const response = await fetch(`/api/rooms/${currentRoom}/join`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerName: currentPlayer, sheet: getCharacterSheet() }),
+      });
+      const data = await response.json();
+      setRoomStatus(data.message || `Joined room ${currentRoom}.`);
+      saveState();
+      syncRoom();
+    }
+
+    async function submitRoomAction(action) {
+      if (!currentRoom) return;
+      gameInput.value = "";
+      setRoomStatus("Action submitted. Waiting for the other player...");
+
+      const response = await fetch(`/api/rooms/${currentRoom}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ playerName: currentPlayer || "Player", action, sheet: getCharacterSheet() }),
+      });
+      const data = await response.json();
+      if (data.message) setRoomStatus(data.message);
+      await syncRoom();
+    }
+
+    async function syncRoom() {
+      if (!currentRoom) return;
+
+      try {
+        const response = await fetch(`/api/rooms/${currentRoom}`);
+        const room = await response.json();
+        if (room.error) {
+          setRoomStatus(room.error);
+          return;
+        }
+
+        setRoomStatus(`Room ${currentRoom}: ${room.players.join(", ")}. ${room.pendingCount}/${room.requiredPlayers} actions ready.`);
+
+        const messages = room.messages || [];
+        messages.slice(lastRoomMessageCount).forEach((message) => {
+          appendMessage(gameLog, message.speaker, message.text);
+          if (message.speaker === "Narrator") {
+            latestNarration = message.text;
+            if (document.querySelector(".auto-read-toggle").checked) speakText(message.text);
+          }
+          if (message.scan) document.querySelector(".scan-output").textContent = message.scan;
+          if (message.powerBreakdown) document.querySelector(".power-breakdown").textContent = message.powerBreakdown;
+        });
+        lastRoomMessageCount = messages.length;
+        saveState();
+      } catch (error) {
+        setRoomStatus("Could not sync room.");
+      }
+    }
+
+    document.querySelector(".create-room").addEventListener("click", createRoom);
+    document.querySelector(".join-room").addEventListener("click", joinRoom);
+    setInterval(syncRoom, 2500);
+
+    document.querySelectorAll(".class-input, .universe-input, .fate-input, .appearance-input, #characterIdea").forEach((input) => {
+      input.addEventListener("input", saveState);
+    });
+
+    function restoreState() {
+      const raw = localStorage.getItem(saveKey);
+      if (!raw) return;
+
+      try {
+        const state = JSON.parse(raw);
+        document.querySelector(".class-input").value = state.power || "Wanderer";
+        document.querySelector(".universe-input").value = state.universe || "Original fantasy";
+        document.querySelector(".fate-input").value = state.fate || "Unwritten";
+        document.querySelector(".appearance-input").value = state.appearance || "";
+        ideaInput.value = state.idea || "";
+        playerNameInput.value = state.player || "";
+        roomCodeInput.value = state.room || "";
+        currentRoom = state.room || "";
+        currentPlayer = state.player || "";
+        if (currentRoom) {
+          document.body.classList.add("has-room");
+          document.querySelector(".room-badge-code").textContent = currentRoom;
+        }
+
+        Object.entries(state.stats || {}).forEach(([name, value]) => setScaledStat(name, value));
+
+        chatHistory.splice(0, chatHistory.length, ...(state.chatHistory || []));
+        gameHistory.splice(0, gameHistory.length, ...(state.gameHistory || []));
+        latestNarration = state.latestNarration || latestNarration;
+
+        if (state.stage === "journey" || state.stage === "setup" || state.stage === "playing") {
+          document.body.classList.add("has-continued");
+        }
+        if (state.stage === "setup" || state.stage === "playing") {
+          document.body.classList.add("has-started");
+        }
+        if (state.stage === "playing") {
+          renderPlaySheet();
+          document.body.classList.add("is-playing");
+          if (state.powerBreakdown) document.querySelector(".power-breakdown").textContent = state.powerBreakdown;
+          if (state.scan) document.querySelector(".scan-output").textContent = state.scan;
+        }
+
+        if (chatHistory.length) {
+          chatLog.innerHTML = "";
+          restoreMessages(chatLog, chatHistory, { user: "You", assistant: "Guide" });
+        }
+
+        if (gameHistory.length) {
+          gameLog.innerHTML = "";
+          restoreMessages(gameLog, gameHistory, { user: "You", assistant: "Narrator" });
+        }
+
+        if (currentRoom) {
+          setRoomStatus(`Restored room ${currentRoom}. Syncing...`);
+          syncRoom();
+        }
+      } catch (error) {
+        console.warn("Could not restore saved campaign", error);
+      }
+    }
+
+    restoreState();
+
+    setCursorPosition(window.innerWidth / 2, window.innerHeight / 2);
+  </script>
+</body>
+</html>
