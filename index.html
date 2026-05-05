@@ -970,7 +970,7 @@
 
     .game-controls {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto auto;
       gap: 0.7rem;
       align-items: end;
       margin-top: 0.7rem;
@@ -987,12 +987,13 @@
 
     .chat-controls {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto auto;
       gap: 0.7rem;
       align-items: end;
     }
 
-    .ai-button {
+    .ai-button,
+    .voice-input-button {
       margin-top: 0.7rem;
       border: 2px solid rgba(255, 255, 255, 0.7);
       background: rgba(250, 204, 21, 0.12);
@@ -1005,10 +1006,18 @@
     }
 
     .ai-button:hover,
-    .ai-button:focus-visible {
+    .ai-button:focus-visible,
+    .voice-input-button:hover,
+    .voice-input-button:focus-visible {
       border-color: #fff;
       background: rgba(250, 204, 21, 0.24);
       outline: none;
+    }
+
+    .voice-input-button.is-listening {
+      border-color: #fff;
+      background: rgba(248, 113, 113, 0.35);
+      box-shadow: 0 0 18px rgba(248, 113, 113, 0.45);
     }
 
     .action-bar {
@@ -1346,6 +1355,7 @@
             </div>
             <div class="chat-controls">
               <textarea class="reply-input" placeholder="Reply to the guide..."></textarea>
+              <button class="voice-input-button voice-reply" type="button">Speak</button>
               <button class="ai-button" type="button">Send</button>
             </div>
           </section>
@@ -1481,6 +1491,7 @@
             </div>
             <div class="game-controls">
               <textarea class="game-input" placeholder="What do you do?"></textarea>
+              <button class="voice-input-button voice-game" type="button">Speak</button>
               <button class="ai-button game-send" type="button">Do It</button>
             </div>
           </section>
@@ -1959,11 +1970,19 @@
 
     function populatePickers() {
       powerSelect.innerHTML = "";
-      powerCatalog.forEach((power) => {
-        const option = document.createElement("option");
-        option.value = power.id;
-        option.textContent = optionLabel(power);
-        powerSelect.append(option);
+      const groups = ["JJK", "Naruto", "Invincible", "Re:Zero", "Original", "Custom"];
+      groups.forEach((groupName) => {
+        const group = document.createElement("optgroup");
+        group.label = groupName;
+        powerCatalog
+          .filter((power) => power.universe === groupName || (groupName === "Custom" && power.id === "custom"))
+          .forEach((power) => {
+            const option = document.createElement("option");
+            option.value = power.id;
+            option.textContent = power.id === "custom" ? power.name : power.name;
+            group.append(option);
+          });
+        if (group.children.length) powerSelect.append(group);
       });
       powerSelect.value = "jjk-limitless";
       powerCustomInput.classList.remove("is-visible");
@@ -2371,6 +2390,45 @@
       return text.replace(/\s+/g, " ").replace(/\*\*/g, "").trim();
     }
 
+    function startVoiceInput(target, button) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        target.value = `${target.value}${target.value ? "\n" : ""}Voice typing is not supported in this browser. Try Chrome or Edge.`;
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = "en-US";
+      recognition.interimResults = true;
+      recognition.continuous = false;
+      const startingText = target.value.trim();
+      button.classList.add("is-listening");
+      button.textContent = "Listening";
+
+      recognition.onresult = (event) => {
+        const transcript = [...event.results]
+          .map((result) => result[0]?.transcript || "")
+          .join("")
+          .trim();
+        target.value = [startingText, transcript].filter(Boolean).join(startingText ? " " : "");
+        target.dispatchEvent(new Event("input", { bubbles: true }));
+      };
+
+      recognition.onerror = () => {
+        button.classList.remove("is-listening");
+        button.textContent = "Speak";
+      };
+
+      recognition.onend = () => {
+        button.classList.remove("is-listening");
+        button.textContent = "Speak";
+        target.focus();
+      };
+
+      recognition.start();
+    }
+
     async function speakText(text) {
       const cleanText = cleanSpeechText(text);
       if (narratorAudio) {
@@ -2529,6 +2587,14 @@
 
     document.querySelector(".game-send").addEventListener("click", () => {
       sendGameAction(gameInput.value);
+    });
+
+    document.querySelector(".voice-reply").addEventListener("click", (event) => {
+      startVoiceInput(replyInput, event.currentTarget);
+    });
+
+    document.querySelector(".voice-game").addEventListener("click", (event) => {
+      startVoiceInput(gameInput, event.currentTarget);
     });
 
     document.querySelector(".read-latest").addEventListener("click", () => {
