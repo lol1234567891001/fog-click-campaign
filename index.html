@@ -1481,6 +1481,74 @@
       transform: translateY(0);
     }
 
+    body .hud-panel,
+    body .settings-group,
+    body .stat-card,
+    body .power-breakdown,
+    body .linked-data-summary,
+    body .scan-output,
+    body .memory-output,
+    body .abilities-output,
+    body .senses-output,
+    body .gear-output,
+    body .action-option,
+    body .game-input,
+    body .sheet-textarea,
+    body .chat-log,
+    body .back-button {
+      border-color: rgba(var(--theme-rgb), 0.42);
+    }
+
+    body .hud-panel {
+      background:
+        linear-gradient(rgba(16, 12, 7, 0.91), rgba(7, 5, 5, 0.94)),
+        radial-gradient(circle at 50% 0%, rgba(var(--theme-rgb), 0.13), transparent 38%);
+    }
+
+    body.is-playing .hud-panel {
+      box-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.78),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 0 42px rgba(var(--theme-deep-rgb), 0.2);
+    }
+
+    body .action-option,
+    body .power-chip {
+      background-color: rgba(var(--theme-deep-rgb), 0.18);
+    }
+
+    body .stat-name,
+    body .detail-line strong,
+    body .console-section h3,
+    body .settings-group summary,
+    body .setup-section summary,
+    body .chat-message strong,
+    body .console-stat strong,
+    body .room-status,
+    body .ai-chat label {
+      color: var(--theme-text);
+    }
+
+    body .ai-button,
+    body .voice-input-button,
+    body .audio-button,
+    body .continue-button,
+    body .scale-button,
+    body .add-power-button,
+    body .suggestion-chip {
+      background-color: rgba(var(--theme-accent-rgb), 0.1);
+    }
+
+    body .ai-button:hover,
+    body .voice-input-button:hover,
+    body .audio-button:hover,
+    body .continue-button:hover,
+    body .scale-button:hover,
+    body .add-power-button:hover,
+    body .suggestion-chip:hover {
+      background-color: rgba(var(--theme-accent-rgb), 0.22);
+    }
+
     @media (max-width: 760px) {
       .settings-grid {
         grid-template-columns: 1fr;
