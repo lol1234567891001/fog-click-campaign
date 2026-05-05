@@ -181,6 +181,43 @@ function formatPowerBreakdown(value, indent = 0) {
   return String(parsed === "" || parsed == null ? "" : parsed);
 }
 
+function decodeJsonStringFragment(fragment) {
+  try {
+    return JSON.parse(`"${fragment}"`);
+  } catch (error) {
+    return fragment.replace(/\\n/g, "\n").replace(/\\"/g, "\"");
+  }
+}
+
+function normalizeGamePayload(content) {
+  const parsed = parseMaybeJson(content);
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    return {
+      message: parsed.message || "The world waits in silence.",
+      scan: parsed.scan || "",
+      powerBreakdown: formatPowerBreakdown(parsed.powerBreakdown || ""),
+      memory: parsed.memory || "",
+      choices: Array.isArray(parsed.choices) ? parsed.choices : [],
+      threat: Boolean(parsed.threat),
+    };
+  }
+
+  const text = String(content || "");
+  const messageMatch = text.match(/"message"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+  const scanMatch = text.match(/"scan"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+  const powerMatch = text.match(/"powerBreakdown"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+  const memoryMatch = text.match(/"memory"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+
+  return {
+    message: messageMatch ? decodeJsonStringFragment(messageMatch[1]) : (text || "The world waits in silence."),
+    scan: scanMatch ? decodeJsonStringFragment(scanMatch[1]) : "",
+    powerBreakdown: powerMatch ? formatPowerBreakdown(decodeJsonStringFragment(powerMatch[1])) : "",
+    memory: memoryMatch ? decodeJsonStringFragment(memoryMatch[1]) : "",
+    choices: [],
+    threat: /"threat"\s*:\s*true/i.test(text),
+  };
+}
+
 async function resolveElevenLabsVoiceId(apiKey) {
   if (cachedElevenLabsVoiceId) return cachedElevenLabsVoiceId;
 
@@ -391,20 +428,7 @@ async function gameMaster(request, response) {
 
   const data = await aiResponse.json();
   const content = data.choices?.[0]?.message?.content || "{}";
-
-  try {
-    const parsed = JSON.parse(content);
-    sendJson(response, 200, {
-      message: parsed.message || "The world waits in silence.",
-      scan: parsed.scan || "",
-      powerBreakdown: formatPowerBreakdown(parsed.powerBreakdown || ""),
-      memory: parsed.memory || "",
-      choices: Array.isArray(parsed.choices) ? parsed.choices : [],
-      threat: Boolean(parsed.threat),
-    });
-  } catch (error) {
-    sendJson(response, 200, { message: content || "The world waits in silence.", scan: "", powerBreakdown: "", memory: "", choices: [], threat: false });
-  }
+  sendJson(response, 200, normalizeGamePayload(content));
 }
 
 function roomSnapshot(room) {

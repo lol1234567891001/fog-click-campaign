@@ -1703,6 +1703,47 @@
       box.textContent = formatTrackerValue(value);
     }
 
+    function decodeJsonStringFragment(fragment) {
+      try {
+        return JSON.parse(`"${fragment}"`);
+      } catch (error) {
+        return fragment.replace(/\\n/g, "\n").replace(/\\"/g, "\"");
+      }
+    }
+
+    function normalizeGameResponse(data) {
+      const parsedMessage = parseMaybeJson(data?.message);
+      if (parsedMessage && typeof parsedMessage === "object" && !Array.isArray(parsedMessage)) {
+        return {
+          ...data,
+          message: parsedMessage.message || "Nothing happens.",
+          scan: data.scan || parsedMessage.scan || "",
+          powerBreakdown: data.powerBreakdown || parsedMessage.powerBreakdown || "",
+          memory: data.memory || parsedMessage.memory || "",
+          choices: Array.isArray(data.choices) && data.choices.length ? data.choices : (Array.isArray(parsedMessage.choices) ? parsedMessage.choices : []),
+          threat: Boolean(data.threat || parsedMessage.threat),
+        };
+      }
+
+      const messageText = String(data?.message || "");
+      if (messageText.trim().startsWith("{")) {
+        const messageMatch = messageText.match(/"message"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+        const scanMatch = messageText.match(/"scan"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+        const powerMatch = messageText.match(/"powerBreakdown"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+        const memoryMatch = messageText.match(/"memory"\s*:\s*"((?:\\.|[^"\\])*)"/s);
+        return {
+          ...data,
+          message: messageMatch ? decodeJsonStringFragment(messageMatch[1]) : messageText,
+          scan: data.scan || (scanMatch ? decodeJsonStringFragment(scanMatch[1]) : ""),
+          powerBreakdown: data.powerBreakdown || (powerMatch ? decodeJsonStringFragment(powerMatch[1]) : ""),
+          memory: data.memory || (memoryMatch ? decodeJsonStringFragment(memoryMatch[1]) : ""),
+          threat: Boolean(data.threat || /"threat"\s*:\s*true/i.test(messageText)),
+        };
+      }
+
+      return data;
+    }
+
     function saveState() {
       const state = {
         stage: document.body.classList.contains("is-playing") ? "playing" : document.body.classList.contains("is-configuring") ? "settings" : document.body.classList.contains("has-started") ? "setup" : document.body.classList.contains("has-continued") ? "journey" : "fog",
@@ -2087,7 +2128,7 @@
             trackerInstructions: document.querySelector(".breakdown-live-input")?.value || "",
           }),
         });
-        const data = await response.json();
+        const data = normalizeGameResponse(await response.json());
         if (!response.ok) {
           throw new Error(data.message || data.error || "Game master request failed.");
         }
@@ -2302,19 +2343,20 @@
 
         const messages = room.messages || [];
         messages.slice(lastRoomMessageCount).forEach((message) => {
-          appendMessage(gameLog, message.speaker, message.text);
+          const normalized = message.speaker === "Narrator" ? normalizeGameResponse({ message: message.text, scan: message.scan, powerBreakdown: message.powerBreakdown, memory: message.memory, choices: message.choices, threat: message.threat }) : { message: message.text };
+          appendMessage(gameLog, message.speaker, normalized.message);
           if (message.speaker === "Narrator") {
-            latestNarration = message.text;
-            if (document.querySelector(".auto-read-toggle").checked) speakText(message.text);
+            latestNarration = normalized.message;
+            if (document.querySelector(".auto-read-toggle").checked) speakText(normalized.message);
           }
-          if (message.scan) {
-            document.querySelector(".scan-output").textContent = message.scan;
-            playAlertSound(message.threat ? "danger" : "scan");
+          if (normalized.scan) {
+            document.querySelector(".scan-output").textContent = normalized.scan;
+            playAlertSound(normalized.threat ? "danger" : "scan");
           }
-          if (message.threat) pulseThreat();
-          if (message.powerBreakdown) setPowerBreakdown(message.powerBreakdown);
-          if (message.memory) document.querySelector(".memory-output").textContent = message.memory;
-          if (Array.isArray(message.choices) && message.choices.length) renderActionChoices(message.choices);
+          if (normalized.threat) pulseThreat();
+          if (normalized.powerBreakdown) setPowerBreakdown(normalized.powerBreakdown);
+          if (normalized.memory) document.querySelector(".memory-output").textContent = normalized.memory;
+          if (Array.isArray(normalized.choices) && normalized.choices.length) renderActionChoices(normalized.choices);
         });
         lastRoomMessageCount = messages.length;
         saveState();
