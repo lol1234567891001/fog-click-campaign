@@ -11,6 +11,10 @@
       --mist: rgba(127, 29, 29, 0.82);
       --ink: #f8fafc;
       --shadow: rgba(6, 10, 18, 0.42);
+      --theme-rgb: 248, 113, 113;
+      --theme-deep-rgb: 127, 29, 29;
+      --theme-accent-rgb: 250, 204, 21;
+      --theme-text: #fed7aa;
     }
 
     * {
@@ -29,8 +33,8 @@
       cursor: none;
       font-family: Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at 18% 22%, rgba(185, 28, 28, 0.3), transparent 24rem),
-        radial-gradient(circle at 72% 18%, rgba(248, 113, 113, 0.14), transparent 20rem),
+        radial-gradient(circle at 18% 22%, rgba(var(--theme-deep-rgb), 0.3), transparent 24rem),
+        radial-gradient(circle at 72% 18%, rgba(var(--theme-rgb), 0.14), transparent 20rem),
         linear-gradient(135deg, #0f172a 0%, #111827 44%, #020617 100%);
       color: var(--ink);
     }
@@ -119,10 +123,10 @@
       z-index: 2;
       pointer-events: none;
       background:
-        radial-gradient(ellipse at 15% 28%, rgba(248, 113, 113, 0.56), transparent 28%),
-        radial-gradient(ellipse at 76% 31%, rgba(220, 38, 38, 0.48), transparent 31%),
-        radial-gradient(ellipse at 46% 78%, rgba(153, 27, 27, 0.42), transparent 35%),
-        repeating-linear-gradient(9deg, rgba(254, 202, 202, 0.12) 0 16px, transparent 16px 42px);
+        radial-gradient(ellipse at 15% 28%, rgba(var(--theme-rgb), 0.56), transparent 28%),
+        radial-gradient(ellipse at 76% 31%, rgba(var(--theme-deep-rgb), 0.48), transparent 31%),
+        radial-gradient(ellipse at 46% 78%, rgba(var(--theme-deep-rgb), 0.42), transparent 35%),
+        repeating-linear-gradient(9deg, rgba(var(--theme-rgb), 0.12) 0 16px, transparent 16px 42px);
       filter: blur(28px);
       opacity: 0.8;
       animation: drift 16s ease-in-out infinite alternate;
@@ -163,6 +167,113 @@
       opacity: 0;
       transform: translateY(14px);
       transition: opacity 900ms ease 350ms, transform 900ms ease 350ms;
+    }
+
+    .color-ui {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 1.3rem;
+      align-content: center;
+      justify-items: center;
+      padding: clamp(1rem, 5vw, 4rem);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 800ms ease 260ms, transform 800ms ease 260ms;
+    }
+
+    .color-title {
+      margin: clamp(1.5rem, 8vh, 5rem) 0 0;
+      width: min(1000px, 100%);
+      font-size: clamp(2.2rem, 6.4vw, 5.8rem);
+      line-height: 0.98;
+      font-weight: 900;
+      text-align: center;
+      text-shadow: 0 8px 34px rgba(0, 0, 0, 0.86), 0 0 26px rgba(var(--theme-rgb), 0.34);
+    }
+
+    .color-grid {
+      align-self: start;
+      width: min(980px, 100%);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(122px, 1fr));
+      gap: 0.7rem;
+    }
+
+    .theme-button {
+      min-height: 74px;
+      border: 2px solid rgba(255, 255, 255, 0.52);
+      color: #fff;
+      font: inherit;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: none;
+      text-shadow: 0 2px 14px rgba(0, 0, 0, 0.86);
+      background:
+        linear-gradient(135deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.38)),
+        linear-gradient(135deg, rgb(var(--swatch)), rgb(var(--swatch-deep)));
+      box-shadow: 0 16px 38px rgba(0, 0, 0, 0.34), inset 0 0 28px rgba(255, 255, 255, 0.12);
+    }
+
+    .theme-button:hover,
+    .theme-button:focus-visible {
+      border-color: #fff;
+      transform: translateY(-2px);
+      outline: none;
+    }
+
+    .theme-button.is-selected {
+      border-color: #fff;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), 0 0 28px rgba(var(--theme-rgb), 0.52), inset 0 0 28px rgba(255, 255, 255, 0.16);
+    }
+
+    .hud-panel,
+    .settings-group,
+    .stat-card,
+    .power-breakdown,
+    .linked-data-summary,
+    .scan-output,
+    .memory-output,
+    .abilities-output,
+    .senses-output,
+    .gear-output,
+    .action-option {
+      border-color: rgba(var(--theme-rgb), 0.34);
+    }
+
+    .stat-name,
+    .detail-line strong,
+    .console-section h3,
+    .settings-group summary,
+    .setup-section summary,
+    .chat-message strong,
+    .console-stat strong,
+    .room-status,
+    .ai-chat label {
+      color: var(--theme-text);
+    }
+
+    .ai-button,
+    .voice-input-button,
+    .audio-button,
+    .continue-button,
+    .scale-button,
+    .add-power-button,
+    .suggestion-chip {
+      background-color: rgba(var(--theme-accent-rgb), 0.1);
+    }
+
+    .ai-button:hover,
+    .voice-input-button:hover,
+    .audio-button:hover,
+    .continue-button:hover,
+    .scale-button:hover,
+    .add-power-button:hover,
+    .suggestion-chip:hover {
+      background-color: rgba(var(--theme-accent-rgb), 0.22);
     }
 
     .journey-title {
@@ -1133,8 +1244,8 @@
       width: 68px;
       height: 68px;
       border: 1px solid rgba(255, 255, 255, 0.42);
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.18), rgba(248, 113, 113, 0.16) 38%, transparent 70%);
-      box-shadow: 0 0 26px rgba(248, 113, 113, 0.46);
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.18), rgba(var(--theme-rgb), 0.16) 38%, transparent 70%);
+      box-shadow: 0 0 26px rgba(var(--theme-rgb), 0.46);
       transition: width 120ms ease, height 120ms ease;
     }
 
@@ -1167,7 +1278,20 @@
       opacity: 1;
     }
 
-    body.has-continued .journey-ui {
+    body.has-continued .color-ui {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    body.has-theme .color-ui {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-12px);
+      transition-delay: 0ms;
+    }
+
+    body.has-theme .journey-ui {
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
@@ -1480,6 +1604,23 @@
     <section class="prompt">
       <h1>Click to continue</h1>
       <p>Move your cursor through the fog.</p>
+    </section>
+    <section class="color-ui" aria-label="Choose theme color">
+      <h2 class="color-title">Choose your color</h2>
+      <div class="color-grid">
+        <button class="theme-button" type="button" data-theme="crimson" style="--swatch: 248,113,113; --swatch-deep: 127,29,29;">Crimson</button>
+        <button class="theme-button" type="button" data-theme="rose" style="--swatch: 251,113,133; --swatch-deep: 159,18,57;">Rose</button>
+        <button class="theme-button" type="button" data-theme="pink" style="--swatch: 244,114,182; --swatch-deep: 157,23,77;">Pink</button>
+        <button class="theme-button" type="button" data-theme="purple" style="--swatch: 168,85,247; --swatch-deep: 88,28,135;">Purple</button>
+        <button class="theme-button" type="button" data-theme="indigo" style="--swatch: 129,140,248; --swatch-deep: 55,48,163;">Indigo</button>
+        <button class="theme-button" type="button" data-theme="blue" style="--swatch: 96,165,250; --swatch-deep: 30,64,175;">Blue</button>
+        <button class="theme-button" type="button" data-theme="cyan" style="--swatch: 34,211,238; --swatch-deep: 21,94,117;">Cyan</button>
+        <button class="theme-button" type="button" data-theme="teal" style="--swatch: 45,212,191; --swatch-deep: 17,94,89;">Teal</button>
+        <button class="theme-button" type="button" data-theme="green" style="--swatch: 74,222,128; --swatch-deep: 22,101,52;">Green</button>
+        <button class="theme-button" type="button" data-theme="lime" style="--swatch: 163,230,53; --swatch-deep: 77,124,15;">Lime</button>
+        <button class="theme-button" type="button" data-theme="gold" style="--swatch: 250,204,21; --swatch-deep: 161,98,7;">Gold</button>
+        <button class="theme-button" type="button" data-theme="orange" style="--swatch: 251,146,60; --swatch-deep: 154,52,18;">Orange</button>
+      </div>
     </section>
     <section class="journey-ui" aria-label="Journey start">
       <h2 class="journey-title">Are you ready to start your journey?</h2>
@@ -1812,6 +1953,21 @@
     let sheetMusicStarted = false;
     let startTransitionTimer = null;
     let clickAudioContext = null;
+    let selectedTheme = "crimson";
+    const themeOptions = {
+      crimson: { rgb: "248, 113, 113", deep: "127, 29, 29", accent: "250, 204, 21", text: "#fed7aa", mist: "rgba(127, 29, 29, 0.82)" },
+      rose: { rgb: "251, 113, 133", deep: "159, 18, 57", accent: "253, 164, 175", text: "#ffe4e6", mist: "rgba(159, 18, 57, 0.82)" },
+      pink: { rgb: "244, 114, 182", deep: "157, 23, 77", accent: "251, 207, 232", text: "#fce7f3", mist: "rgba(157, 23, 77, 0.82)" },
+      purple: { rgb: "168, 85, 247", deep: "88, 28, 135", accent: "216, 180, 254", text: "#f3e8ff", mist: "rgba(88, 28, 135, 0.82)" },
+      indigo: { rgb: "129, 140, 248", deep: "55, 48, 163", accent: "199, 210, 254", text: "#e0e7ff", mist: "rgba(55, 48, 163, 0.82)" },
+      blue: { rgb: "96, 165, 250", deep: "30, 64, 175", accent: "191, 219, 254", text: "#dbeafe", mist: "rgba(30, 64, 175, 0.82)" },
+      cyan: { rgb: "34, 211, 238", deep: "21, 94, 117", accent: "165, 243, 252", text: "#cffafe", mist: "rgba(21, 94, 117, 0.82)" },
+      teal: { rgb: "45, 212, 191", deep: "17, 94, 89", accent: "153, 246, 228", text: "#ccfbf1", mist: "rgba(17, 94, 89, 0.82)" },
+      green: { rgb: "74, 222, 128", deep: "22, 101, 52", accent: "187, 247, 208", text: "#dcfce7", mist: "rgba(22, 101, 52, 0.82)" },
+      lime: { rgb: "163, 230, 53", deep: "77, 124, 15", accent: "217, 249, 157", text: "#ecfccb", mist: "rgba(77, 124, 15, 0.82)" },
+      gold: { rgb: "250, 204, 21", deep: "161, 98, 7", accent: "254, 240, 138", text: "#fef3c7", mist: "rgba(161, 98, 7, 0.82)" },
+      orange: { rgb: "251, 146, 60", deep: "154, 52, 18", accent: "254, 215, 170", text: "#ffedd5", mist: "rgba(154, 52, 18, 0.82)" },
+    };
     const universeOptions = [
       { value: "Jujutsu Kaisen", label: "JJK" },
       { value: "Naruto", label: "Naruto" },
@@ -1971,6 +2127,20 @@
     function setCursorPosition(x, y) {
       root.style.setProperty("--cursor-x", `${x}px`);
       root.style.setProperty("--cursor-y", `${y}px`);
+    }
+
+    function applyTheme(themeName, shouldSave = true) {
+      const theme = themeOptions[themeName] || themeOptions.crimson;
+      selectedTheme = themeOptions[themeName] ? themeName : "crimson";
+      root.style.setProperty("--theme-rgb", theme.rgb);
+      root.style.setProperty("--theme-deep-rgb", theme.deep);
+      root.style.setProperty("--theme-accent-rgb", theme.accent);
+      root.style.setProperty("--theme-text", theme.text);
+      root.style.setProperty("--mist", theme.mist);
+      document.querySelectorAll(".theme-button").forEach((button) => {
+        button.classList.toggle("is-selected", button.dataset.theme === selectedTheme);
+      });
+      if (shouldSave) saveState();
     }
 
     function startIntroMusic() {
@@ -2228,6 +2398,7 @@
         stopSheetMusic();
         stopIntroMusic();
       } else if (document.body.classList.contains("has-continued")) {
+        document.body.classList.remove("has-theme");
         document.body.classList.remove("has-continued");
         stopSheetMusic();
         stopIntroMusic();
@@ -2266,6 +2437,13 @@
     });
 
     document.querySelector(".back-button").addEventListener("click", goBackOneScreen);
+
+    document.querySelectorAll(".theme-button").forEach((button) => {
+      button.addEventListener("click", () => {
+        applyTheme(button.dataset.theme);
+        document.body.classList.add("has-theme");
+      });
+    });
 
     document.addEventListener("click", (event) => {
       if (event.target.closest("button")) {
@@ -2634,6 +2812,7 @@
         gearOutput: document.querySelector(".gear-output")?.textContent || "",
         room: currentRoom,
         player: currentPlayer,
+        theme: selectedTheme,
         selectedPowerIds,
         customPowers: [...customPowers.entries()],
         powerPicker: powerSelect.value,
@@ -3380,6 +3559,10 @@
         if (state.stage === "journey" || state.stage === "setup" || state.stage === "settings" || state.stage === "playing") {
           document.body.classList.add("has-continued");
         }
+        applyTheme(state.theme || "crimson", false);
+        if (state.stage === "journey" || state.stage === "setup" || state.stage === "settings" || state.stage === "playing") {
+          document.body.classList.add("has-theme");
+        }
         if (state.stage === "setup" || state.stage === "settings" || state.stage === "playing") {
           document.body.classList.add("has-started");
         }
@@ -3422,6 +3605,7 @@
       }
     }
 
+    applyTheme("crimson", false);
     populatePickers();
     restoreState();
 
