@@ -257,6 +257,25 @@
       padding: 1rem;
     }
 
+    .settings-group summary,
+    .setup-section summary {
+      color: #fed7aa;
+      font-weight: 900;
+      text-transform: uppercase;
+      cursor: none;
+      list-style-position: inside;
+    }
+
+    .settings-group[open] summary,
+    .setup-section[open] summary {
+      margin-bottom: 0.8rem;
+    }
+
+    .setup-section {
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.7rem 0;
+    }
+
     .settings-group h3 {
       margin: 0 0 0.75rem;
       color: #fed7aa;
@@ -681,6 +700,32 @@
       font-weight: 900;
       cursor: none;
       padding: 0 0.1rem;
+    }
+
+    .suggestion-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin: 0.4rem 0 0.85rem;
+    }
+
+    .suggestion-chip {
+      border: 1px solid rgba(254, 215, 170, 0.42);
+      background: rgba(250, 204, 21, 0.1);
+      color: #fff7ed;
+      padding: 0.32rem 0.48rem;
+      font: inherit;
+      font-size: 0.72rem;
+      font-weight: 900;
+      cursor: none;
+      text-transform: uppercase;
+    }
+
+    .suggestion-chip:hover,
+    .suggestion-chip:focus-visible {
+      border-color: #fff;
+      background: rgba(250, 204, 21, 0.22);
+      outline: none;
     }
 
     .ai-chat {
@@ -1231,7 +1276,8 @@
               <button class="scale-button" type="button">Scale Stats</button>
             </header>
             <div class="sheet-details">
-              <h3>Player</h3>
+              <details class="setup-section" open>
+                <summary>Core</summary>
               <div class="detail-line">
                 <strong>Name</strong>
                 <input class="setup-player-name-input" type="text" value="Player" aria-label="Player name">
@@ -1262,15 +1308,24 @@
               </div>
               <label for="appearanceInput" class="stat-name">Appearance</label>
               <textarea class="sheet-textarea appearance-input" id="appearanceInput" placeholder="Example: 6'5, black hair, blue eyes"></textarea>
+              </details>
+              <details class="setup-section">
+                <summary>Power Details</summary>
               <label for="abilitiesInput" class="stat-name">Abilities</label>
               <textarea class="sheet-textarea abilities-input" id="abilitiesInput" placeholder="List active abilities, attacks, transformations, techniques, tools..."></textarea>
+              <div class="suggestion-row abilities-suggestions" aria-label="Ability suggestions"></div>
               <label for="sensesInput" class="stat-name">Passive Senses</label>
               <textarea class="sheet-textarea senses-input" id="sensesInput" placeholder="Energy sensing, suit scans, danger sense, smell, hearing, radar..."></textarea>
+              <div class="suggestion-row senses-suggestions" aria-label="Passive sense suggestions"></div>
               <label for="gearInput" class="stat-name">Gear</label>
               <textarea class="sheet-textarea gear-input" id="gearInput" placeholder="Weapons, armor, suit AI, cursed tools, inventory..."></textarea>
+              <div class="suggestion-row gear-suggestions" aria-label="Gear suggestions"></div>
               <label for="breakdownInput" class="stat-name">Power Breakdown Tracks</label>
               <textarea class="sheet-textarea breakdown-input" id="breakdownInput" placeholder="Example: time of day, suit charge, cursed energy grade, power growth, JJK grade comparison..."></textarea>
-              <h3>Campaign Settings</h3>
+              <div class="suggestion-row tracks-suggestions" aria-label="Power tracker suggestions"></div>
+              </details>
+              <details class="setup-section">
+                <summary>Campaign</summary>
               <div class="detail-line">
                 <strong>Tone</strong>
                 <input class="tone-input" type="text" value="Gritty cinematic" aria-label="Campaign tone">
@@ -1283,6 +1338,10 @@
                 <strong>Canon</strong>
                 <input class="canon-input" type="text" value="Canon characters allowed" aria-label="Canon rules">
               </div>
+              <label for="startingSceneInput" class="stat-name">Starting Scene</label>
+              <select class="power-select starting-scene-select" aria-label="Starting scene preset"></select>
+              <textarea class="sheet-textarea starting-scene-input" id="startingSceneInput" placeholder="Example: A few days before Yuji enrolls at Jujutsu High, Gojo is taking me to Tokyo Jujutsu High for the first time."></textarea>
+              </details>
               <button class="continue-button" type="button">Continue</button>
             </div>
             <div class="character-body">
@@ -1370,8 +1429,8 @@
           <button class="continue-to-game-button continue-button" type="button">Enter Game</button>
         </header>
         <div class="settings-grid">
-          <section class="settings-group">
-            <h3>Multiplayer</h3>
+          <details class="settings-group" open>
+            <summary>Multiplayer</summary>
             <div class="room-controls" aria-label="Multiplayer room controls">
               <input class="room-input player-name-input" type="text" placeholder="Your name" aria-label="Your player name">
               <input class="room-input room-code-input" type="text" placeholder="Room code" aria-label="Room code">
@@ -1380,9 +1439,9 @@
               <button class="audio-button leave-room" type="button">Solo Mode</button>
               <div class="room-status">Solo mode. Create or join a room to wait for both players.</div>
             </div>
-          </section>
-          <section class="settings-group">
-            <h3>Audio</h3>
+          </details>
+          <details class="settings-group">
+            <summary>Audio</summary>
             <div class="audio-controls" aria-label="Audio narration controls">
               <button class="audio-button read-latest" type="button">Read Latest</button>
               <button class="audio-button stop-reading" type="button">Stop</button>
@@ -1410,29 +1469,29 @@
                 <input class="volume-control" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Sound volume">
               </label>
             </div>
-          </section>
-          <section class="settings-group">
-            <h3>Accessibility</h3>
+          </details>
+          <details class="settings-group">
+            <summary>Accessibility</summary>
             <div class="accessibility-controls" aria-label="Accessibility controls">
               <label class="control-toggle"><input class="high-contrast-toggle" type="checkbox">High contrast</label>
               <label class="control-toggle"><input class="large-text-toggle" type="checkbox">Big text</label>
               <label class="control-toggle"><input class="easy-font-toggle" type="checkbox">Easy font</label>
               <label class="control-toggle"><input class="reduce-motion-toggle" type="checkbox">Less motion</label>
             </div>
-          </section>
-          <section class="settings-group">
-            <h3>Saves</h3>
+          </details>
+          <details class="settings-group">
+            <summary>Saves</summary>
             <div class="save-controls" aria-label="Campaign save controls">
               <button class="audio-button save-campaign" type="button">Save Campaign</button>
               <input class="room-input campaign-code-input" type="text" placeholder="Save code" aria-label="Campaign save code">
               <button class="audio-button load-campaign" type="button">Load Campaign</button>
               <div class="room-status campaign-save-status">Local autosave is on.</div>
             </div>
-          </section>
-          <section class="settings-group">
-            <h3>Linked Character Data</h3>
+          </details>
+          <details class="settings-group">
+            <summary>Linked Character Data</summary>
             <div class="linked-data-summary">Character data will appear here before you enter the game.</div>
-          </section>
+          </details>
         </div>
       </div>
     </section>
@@ -1525,6 +1584,24 @@
       { value: "Re:Zero", label: "Re:Zero" },
       { value: "Original fantasy", label: "Original World" },
       { value: "custom", label: "Custom..." },
+    ];
+    const startingSceneOptions = [
+      { universe: "Jujutsu Kaisen", label: "Gojo brings you to Tokyo Jujutsu High", text: "A few days before Yuji Itadori enrolls at Tokyo Jujutsu High, Gojo finds me after a cursed incident and brings me to Jujutsu High for evaluation." },
+      { universe: "Jujutsu Kaisen", label: "First mission near Tokyo", text: "I begin as a newly noticed sorcerer on my first field mission near Tokyo, with strange cursed energy signatures pulling Jujutsu High into the case." },
+      { universe: "Jujutsu Kaisen", label: "Kyoto exchange lead-up", text: "I start shortly before the Kyoto Goodwill Event, training at Jujutsu High while rumors of a dangerous curse user spread." },
+      { universe: "Naruto", label: "Konoha academy graduation", text: "I begin in Konoha around academy graduation, being assigned to a squad while my unusual power starts drawing attention." },
+      { universe: "Naruto", label: "Chunin Exams arrival", text: "I start as a young shinobi arriving for the Chunin Exams, with rival villages, hidden agendas, and my abilities about to be tested." },
+      { universe: "Naruto", label: "Wandering missing-nin encounter", text: "I begin outside a hidden village on a dangerous road, running into shinobi conflict before choosing who to trust." },
+      { universe: "Invincible", label: "Guardian candidate", text: "I begin as a new powered candidate being observed for superhero work after a public incident exposes my abilities." },
+      { universe: "Invincible", label: "GDA containment interview", text: "I start inside a GDA facility after my powers trigger in public, being interviewed while alarms hint at a larger threat nearby." },
+      { universe: "Invincible", label: "Alien tech crash site", text: "I begin near a fresh alien crash site, where my powers or gear react before heroes and hostile forces arrive." },
+      { universe: "Re:Zero", label: "Capital arrival", text: "I begin in Lugunica's capital on a crowded market street, moments before a small encounter pulls me into royal-selection politics." },
+      { universe: "Re:Zero", label: "Roswaal mansion road", text: "I start on the road toward Roswaal's mansion, carrying rumors, danger, and a power nobody fully understands yet." },
+      { universe: "Re:Zero", label: "Sanctuary edge", text: "I begin near the edge of Sanctuary, where demi-human tensions, old magic, and Witch Factor rumors are already stirring." },
+      { universe: "Original fantasy", label: "Original city gate", text: "I begin at the gate of a dangerous city where guilds, nobles, criminals, and supernatural factions all sense my arrival." },
+      { universe: "Original fantasy", label: "Forest awakening", text: "I wake in a mist-heavy forest after a power surge, with signs of a nearby settlement and something tracking me." },
+      { universe: "Original fantasy", label: "Academy summons", text: "I begin after receiving a summons to an elite academy that studies dangerous powers, where my entrance test is already underway." },
+      { universe: "custom", label: "Custom starting scene", text: "" },
     ];
     const powerCatalog = [
       { id: "custom", universe: "Custom", name: "Custom...", abilities: "", senses: "", gear: "", tracks: "" },
@@ -1879,6 +1956,7 @@
     const selectedPowersBox = document.querySelector(".selected-powers");
     const universeSelect = document.querySelector(".universe-select");
     const universeCustomInput = document.querySelector(".universe-custom-input");
+    const startingSceneSelect = document.querySelector(".starting-scene-select");
 
     function optionLabel(power) {
       return power.id === "custom" ? power.name : `${power.universe} - ${power.name}`;
@@ -1894,6 +1972,33 @@
       const block = `${heading}:\n${cleanText}`;
       if (String(current || "").includes(block)) return current;
       return [current, block].filter(Boolean).join("\n\n");
+    }
+
+    function addSuggestionButtons(containerSelector, inputSelector, fieldName) {
+      const container = document.querySelector(containerSelector);
+      const input = document.querySelector(inputSelector);
+      if (!container || !input) return;
+      container.innerHTML = "";
+      selectedPowerIds.map(getPowerById).filter(Boolean).forEach((power) => {
+        if (!power[fieldName]) return;
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "suggestion-chip";
+        button.textContent = `Add ${power.name}`;
+        button.addEventListener("click", () => {
+          input.value = appendSectionText(input.value, power.name, power[fieldName]);
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+          saveState();
+        });
+        container.append(button);
+      });
+    }
+
+    function renderPowerSuggestions() {
+      addSuggestionButtons(".abilities-suggestions", ".abilities-input", "abilities");
+      addSuggestionButtons(".senses-suggestions", ".senses-input", "senses");
+      addSuggestionButtons(".gear-suggestions", ".gear-input", "gear");
+      addSuggestionButtons(".tracks-suggestions", ".breakdown-input", "tracks");
     }
 
     function mergeSelectedPowerDetails() {
@@ -1932,6 +2037,7 @@
         chip.append(removeButton);
         selectedPowersBox.append(chip);
       });
+      renderPowerSuggestions();
     }
 
     function addSelectedPower() {
@@ -1965,7 +2071,37 @@
       const custom = universeCustomInput.value.trim();
       universeCustomInput.classList.toggle("is-visible", selected === "custom");
       document.querySelector(".universe-input").value = selected === "custom" ? (custom || "Custom world") : selected;
+      populateStartingScenes(false);
       if (shouldSave) saveState();
+    }
+
+    function populateStartingScenes(shouldSave = false) {
+      const universe = document.querySelector(".universe-input").value;
+      const current = startingSceneSelect.value;
+      startingSceneSelect.innerHTML = "";
+      startingSceneOptions
+        .filter((scene) => scene.universe === universe || scene.universe === "custom")
+        .forEach((scene, index) => {
+          const option = document.createElement("option");
+          option.value = scene.text || "custom";
+          option.textContent = scene.label;
+          if (!scene.text) option.dataset.custom = "true";
+          startingSceneSelect.append(option);
+          if (index === 0 && !document.querySelector(".starting-scene-input").value.trim()) {
+            document.querySelector(".starting-scene-input").value = scene.text;
+          }
+        });
+      if ([...startingSceneSelect.options].some((option) => option.value === current)) {
+        startingSceneSelect.value = current;
+      }
+      if (shouldSave) saveState();
+    }
+
+    function applyStartingScenePreset() {
+      const selected = startingSceneSelect.selectedOptions[0];
+      if (!selected || selected.dataset.custom) return;
+      document.querySelector(".starting-scene-input").value = startingSceneSelect.value;
+      saveState();
     }
 
     function populatePickers() {
@@ -1997,6 +2133,7 @@
 
       universeSelect.value = "Original fantasy";
       updateUniverseValue(false);
+      populateStartingScenes(false);
       renderSelectedPowers();
     }
 
@@ -2134,6 +2271,7 @@
         senses: document.querySelector(".senses-input").value,
         gear: document.querySelector(".gear-input").value,
         breakdownTracks: document.querySelector(".breakdown-input").value,
+        startingScene: document.querySelector(".starting-scene-input").value,
         tone: document.querySelector(".tone-input").value,
         difficulty: document.querySelector(".difficulty-input").value,
         canon: document.querySelector(".canon-input").value,
@@ -2157,6 +2295,7 @@
         powerPicker: powerSelect.value,
         universePicker: universeSelect.value,
         customUniverse: universeCustomInput.value,
+        startingScenePicker: startingSceneSelect.value,
       };
       localStorage.setItem(saveKey, JSON.stringify(state));
     }
@@ -2215,6 +2354,7 @@
         senses: document.querySelector(".senses-input").value || "Unwritten",
         gear: document.querySelector(".gear-input").value || "Unwritten",
         breakdownTracks: document.querySelector(".breakdown-input").value || "Track power growth, current state, and story-relevant power metrics.",
+        startingScene: document.querySelector(".starting-scene-input").value || "Start at a natural first scene for this character and universe.",
         breakdownLiveInstructions: document.querySelector(".breakdown-live-input")?.value || "",
         campaign: {
           tone: document.querySelector(".tone-input").value || "Gritty cinematic",
@@ -2305,6 +2445,7 @@
         `Passive Senses: ${sheet.senses}\n\n` +
         `Gear: ${sheet.gear}\n\n` +
         `Power Breakdown Tracks: ${sheet.breakdownTracks}\n\n` +
+        `Starting Scene: ${sheet.startingScene}\n\n` +
         `Story Recap: ${sheet.recap}\n\n` +
         `Campaign: ${sheet.campaign.tone}, ${sheet.campaign.difficulty}, ${sheet.campaign.canon}`;
     }
@@ -2517,7 +2658,7 @@
       renderPlaySheet();
       document.body.classList.remove("is-configuring");
       document.body.classList.add("is-playing");
-      refreshPowerBreakdown("Campaign start. Use the character sheet, recap, and requested tracking fields to initialize the console.");
+      refreshPowerBreakdown(`Campaign start. Starting scene: ${getCharacterSheet().startingScene}. Use the character sheet, recap, and requested tracking fields to initialize the console.`);
       saveState();
       if (document.querySelector(".auto-read-toggle").checked) {
         speakText(latestNarration);
@@ -2813,8 +2954,9 @@
     });
     universeSelect.addEventListener("change", updateUniverseValue);
     universeCustomInput.addEventListener("input", updateUniverseValue);
+    startingSceneSelect.addEventListener("change", applyStartingScenePreset);
 
-    document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .breakdown-input, .breakdown-live-input, .tone-input, .difficulty-input, .canon-input, #characterIdea, .recap-input").forEach((input) => {
+    document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .breakdown-input, .breakdown-live-input, .tone-input, .difficulty-input, .canon-input, .starting-scene-input, #characterIdea, .recap-input").forEach((input) => {
       input.addEventListener("input", saveState);
     });
 
@@ -2857,6 +2999,9 @@
         }
         universeCustomInput.value = state.customUniverse || (universeSelect.value === "custom" ? state.universe || "" : "");
         updateUniverseValue(false);
+        if (state.startingScenePicker && [...startingSceneSelect.options].some((option) => option.value === state.startingScenePicker)) {
+          startingSceneSelect.value = state.startingScenePicker;
+        }
         document.querySelector(".setup-player-name-input").value = state.playerName || "Player";
         document.querySelector(".fate-input").value = state.fate || "Unwritten";
         document.querySelector(".appearance-input").value = state.appearance || "";
@@ -2864,6 +3009,7 @@
         document.querySelector(".senses-input").value = state.senses || "";
         document.querySelector(".gear-input").value = state.gear || "";
         document.querySelector(".breakdown-input").value = state.breakdownTracks || "";
+        document.querySelector(".starting-scene-input").value = state.startingScene || "";
         document.querySelector(".tone-input").value = state.tone || "Gritty cinematic";
         document.querySelector(".difficulty-input").value = state.difficulty || "Dangerous";
         document.querySelector(".canon-input").value = state.canon || "Canon characters allowed";
