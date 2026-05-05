@@ -748,6 +748,7 @@
 
     .power-select,
     .universe-select,
+    .power-search-input,
     .power-custom-input,
     .universe-custom-input {
       min-width: 0;
@@ -789,6 +790,17 @@
       display: flex;
       flex-wrap: wrap;
       gap: 0.35rem;
+    }
+
+    .character-preview {
+      margin-top: 0.9rem;
+      border: 1px solid rgba(var(--theme-rgb), 0.28);
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.28), rgba(0, 0, 0, 0.16)),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 12px);
+      padding: 0.75rem;
+      line-height: 1.35;
+      white-space: pre-wrap;
     }
 
     .power-chip {
@@ -1725,6 +1737,7 @@
                 <strong>Power</strong>
                 <input class="class-input" type="hidden" value="Wanderer" aria-label="Power or class">
                 <div class="picker-stack" aria-label="Power picker">
+                  <input class="power-search-input" type="text" placeholder="Search powers..." aria-label="Search powers">
                   <div class="picker-row">
                     <select class="power-select" aria-label="Choose a power"></select>
                     <button class="add-power-button" type="button">Add</button>
@@ -1781,6 +1794,7 @@
               <select class="power-select starting-scene-select" aria-label="Starting scene preset"></select>
               <textarea class="sheet-textarea starting-scene-input" id="startingSceneInput" placeholder="Example: A few days before Yuji enrolls at Jujutsu High, Gojo is taking me to Tokyo Jujutsu High for the first time."></textarea>
               </details>
+              <div class="character-preview">Character preview will update as you build.</div>
               <button class="continue-button" type="button">Continue</button>
             </div>
             <div class="character-body">
@@ -1924,6 +1938,7 @@
               <button class="audio-button save-campaign" type="button">Save Campaign</button>
               <input class="room-input campaign-code-input" type="text" placeholder="Save code" aria-label="Campaign save code">
               <button class="audio-button load-campaign" type="button">Load Campaign</button>
+              <button class="audio-button new-campaign" type="button">New Campaign</button>
               <div class="room-status campaign-save-status">Local autosave is on.</div>
             </div>
           </details>
@@ -1981,6 +1996,7 @@
           <section class="hud-panel game-master">
             <h3>Adventure</h3>
             <div class="audio-controls game-audio-controls" aria-label="Adventure audio controls">
+              <button class="audio-button start-scene-button" type="button">Start Scene</button>
               <button class="audio-button game-read-latest" type="button">Read Adventure</button>
               <button class="audio-button game-stop-reading" type="button">Stop Audio</button>
             </div>
@@ -2542,6 +2558,7 @@
     let currentPlayer = "";
     let lastRoomMessageCount = 0;
     const powerSelect = document.querySelector(".power-select");
+    const powerSearchInput = document.querySelector(".power-search-input");
     const powerCustomInput = document.querySelector(".power-custom-input");
     const selectedPowersBox = document.querySelector(".selected-powers");
     const universeSelect = document.querySelector(".universe-select");
@@ -2550,6 +2567,11 @@
 
     function optionLabel(power) {
       return power.id === "custom" ? power.name : `${power.universe} - ${power.name}`;
+    }
+
+    function powerMatchesSearch(power, query) {
+      if (!query) return true;
+      return `${power.universe} ${power.name} ${power.abilities} ${power.senses} ${power.gear} ${power.tracks}`.toLowerCase().includes(query);
     }
 
     function getPowerById(id) {
@@ -2628,6 +2650,7 @@
         selectedPowersBox.append(chip);
       });
       renderPowerSuggestions();
+      renderCharacterPreview();
     }
 
     function addSelectedPower() {
@@ -2694,14 +2717,16 @@
       saveState();
     }
 
-    function populatePickers() {
+    function populatePowerOptions() {
+      const query = powerSearchInput.value.trim().toLowerCase();
+      const current = powerSelect.value;
       powerSelect.innerHTML = "";
       const groups = ["JJK", "Naruto", "Invincible", "Re:Zero", "Original", "Custom"];
       groups.forEach((groupName) => {
         const group = document.createElement("optgroup");
         group.label = groupName;
         powerCatalog
-          .filter((power) => power.universe === groupName || (groupName === "Custom" && power.id === "custom"))
+          .filter((power) => (power.universe === groupName || (groupName === "Custom" && power.id === "custom")) && (power.id === "custom" || powerMatchesSearch(power, query)))
           .forEach((power) => {
             const option = document.createElement("option");
             option.value = power.id;
@@ -2710,8 +2735,19 @@
           });
         if (group.children.length) powerSelect.append(group);
       });
-      powerSelect.value = "jjk-limitless";
+      if ([...powerSelect.options].some((option) => option.value === current)) {
+        powerSelect.value = current;
+      } else {
+        powerSelect.value = powerSelect.options[0]?.value || "custom";
+      }
       powerCustomInput.classList.remove("is-visible");
+    }
+
+    function populatePickers() {
+      populatePowerOptions();
+      if ([...powerSelect.options].some((option) => option.value === "jjk-limitless")) {
+        powerSelect.value = "jjk-limitless";
+      }
 
       universeSelect.innerHTML = "";
       universeOptions.forEach((universe) => {
@@ -2889,6 +2925,7 @@
         startingScenePicker: startingSceneSelect.value,
       };
       localStorage.setItem(saveKey, JSON.stringify(state));
+      renderCharacterPreview();
     }
 
     function restoreMessages(container, messages, speakerMap) {
@@ -2956,6 +2993,24 @@
         recap: document.querySelector(".recap-input").value || "No prior story recap.",
         stats,
       };
+    }
+
+    function renderCharacterPreview() {
+      const preview = document.querySelector(".character-preview");
+      if (!preview) return;
+      const power = document.querySelector(".class-input").value || "Wanderer";
+      const universe = document.querySelector(".universe-input").value || "Original fantasy";
+      const name = document.querySelector(".setup-player-name-input").value || "Player";
+      const fate = document.querySelector(".fate-input").value || "Unwritten";
+      const start = document.querySelector(".starting-scene-input").value || "No starting scene chosen yet.";
+      const tone = document.querySelector(".tone-input").value || "Gritty cinematic";
+      preview.textContent =
+        `Name: ${name}\n` +
+        `Universe: ${universe}\n` +
+        `Powers: ${power}\n` +
+        `Fate: ${fate}\n` +
+        `Tone: ${tone}\n` +
+        `Start: ${start}`;
     }
 
     function renderPlaySheet() {
@@ -3323,6 +3378,10 @@
       sendGameAction(gameInput.value);
     });
 
+    document.querySelector(".start-scene-button").addEventListener("click", () => {
+      sendGameAction(`Begin the opening scene now. Use my character sheet, selected powers, campaign settings, and this starting scene: ${getCharacterSheet().startingScene}`);
+    });
+
     document.querySelector(".voice-reply").addEventListener("click", (event) => {
       startVoiceInput(replyInput, event.currentTarget);
     });
@@ -3393,6 +3452,14 @@
 
     document.querySelector(".save-campaign").addEventListener("click", saveCampaignOnline);
     document.querySelector(".load-campaign").addEventListener("click", loadCampaignOnline);
+    document.querySelector(".new-campaign").addEventListener("click", () => {
+      if (!window.confirm("Start a new campaign and clear this browser save?")) return;
+      stopIntroMusic();
+      stopSheetMusic();
+      stopNarrationAudio();
+      localStorage.removeItem(saveKey);
+      location.reload();
+    });
 
     document.querySelectorAll(".action-option").forEach((button) => {
       button.addEventListener("click", () => sendGameAction(button.dataset.action || button.textContent));
@@ -3537,6 +3604,10 @@
     powerSelect.addEventListener("change", () => {
       powerCustomInput.classList.toggle("is-visible", powerSelect.value === "custom");
       saveState();
+    });
+    powerSearchInput.addEventListener("input", () => {
+      populatePowerOptions();
+      powerCustomInput.classList.toggle("is-visible", powerSelect.value === "custom");
     });
     document.querySelector(".add-power-button").addEventListener("click", addSelectedPower);
     powerCustomInput.addEventListener("keydown", (event) => {
