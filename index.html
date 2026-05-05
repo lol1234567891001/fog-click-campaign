@@ -1789,6 +1789,25 @@
       color: var(--theme-text);
       font-weight: 700;
     }
+
+    .owner-tools {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .owner-tools h3 {
+      margin: 0;
+      font-size: 1rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .owner-tools input {
+      width: 100%;
+    }
   </style>
 </head>
 <body class="access-locked">
@@ -1804,6 +1823,12 @@
           <button class="access-request-button" type="button">Request Code</button>
         </div>
         <p class="access-status" aria-live="polite"></p>
+        <div class="owner-tools" aria-label="Owner tools">
+          <h3>Create Customer Code</h3>
+          <input class="owner-device-input" type="text" placeholder="Customer Device ID" aria-label="Customer Device ID">
+          <button class="owner-code-button" type="button">Create Code</button>
+          <p class="owner-code-output" aria-live="polite"></p>
+        </div>
       </div>
     </div>
   </section>
@@ -2641,6 +2666,9 @@
     const accessUnlockButton = document.querySelector(".access-unlock-button");
     const accessRequestButton = document.querySelector(".access-request-button");
     const accessStatus = document.querySelector(".access-status");
+    const ownerDeviceInput = document.querySelector(".owner-device-input");
+    const ownerCodeButton = document.querySelector(".owner-code-button");
+    const ownerCodeOutput = document.querySelector(".owner-code-output");
 
     function setAccessStatus(message) {
       accessStatus.textContent = message;
@@ -2686,7 +2714,36 @@
         setAccessStatus(`Request created for ${data.ownerEmail}.`);
         window.location.href = data.mailto;
       } catch (error) {
-        setAccessStatus(error.message);
+        const subject = encodeURIComponent("Fog Click Campaign access request");
+        const body = encodeURIComponent(`Device ID: ${accessDeviceId}\nRequested password for Fog Click Campaign.`);
+        window.location.href = `mailto:ellisonbrayden5@gmail.com?subject=${subject}&body=${body}`;
+        setAccessStatus("Server did not answer, so I opened the email request instead.");
+      }
+    }
+
+    async function createOwnerCode() {
+      const deviceId = ownerDeviceInput.value.trim();
+      const ownerPassword = accessPasswordInput.value.trim();
+      if (!deviceId) {
+        ownerCodeOutput.textContent = "Paste the customer's Device ID first.";
+        return;
+      }
+      if (!ownerPassword) {
+        ownerCodeOutput.textContent = "Type your owner password first.";
+        return;
+      }
+      ownerCodeOutput.textContent = "Creating code...";
+      try {
+        const response = await nativeFetch("/api/access/create", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId, ownerPassword }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not create code.");
+        ownerCodeOutput.textContent = `Password for ${data.deviceId}: ${data.code}`;
+      } catch (error) {
+        ownerCodeOutput.textContent = error.message;
       }
     }
 
@@ -2696,6 +2753,7 @@
     }
     accessUnlockButton.addEventListener("click", verifyAccessPassword);
     accessRequestButton.addEventListener("click", requestDeviceAccess);
+    ownerCodeButton.addEventListener("click", createOwnerCode);
     accessPasswordInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") verifyAccessPassword();
     });

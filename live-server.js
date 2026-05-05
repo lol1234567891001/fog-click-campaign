@@ -83,13 +83,12 @@ function saveAccessCodes() {
   fs.writeFileSync(accessCodesPath, JSON.stringify(Object.fromEntries(accessCodes), null, 2));
 }
 
-function createAccessCode() {
-  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let index = 0; index < 8; index += 1) {
-    code += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return code;
+function createAccessCode(deviceId) {
+  const digest = crypto.createHmac("sha256", accessSecret)
+    .update(String(deviceId).trim().toUpperCase())
+    .digest("hex")
+    .toUpperCase();
+  return `${digest.slice(0, 4)}-${digest.slice(4, 8)}`;
 }
 
 function signAccessToken(deviceId, accessType) {
@@ -130,23 +129,45 @@ async function requestAccess(request, response) {
     return;
   }
 
-  const existing = accessCodes.get(deviceId);
-  const code = existing?.code || createAccessCode();
+  const existing = accessCodes.get(deviceId) || {};
   accessCodes.set(deviceId, {
-    code,
-    createdAt: existing?.createdAt || new Date().toISOString(),
+    ...existing,
+    code: existing.code || createAccessCode(deviceId),
+    createdAt: existing.createdAt || new Date().toISOString(),
     lastRequestedAt: new Date().toISOString(),
   });
   saveAccessCodes();
 
-  console.log(`Access request for ${deviceId}. Device password: ${code}`);
   const subject = encodeURIComponent("Fog Click Campaign access request");
-  const bodyText = encodeURIComponent(`Device ID: ${deviceId}\nRequested password for Fog Click Campaign.`);
+  const bodyText = encodeURIComponent(`Device ID: ${deviceId}\nRequested password for Fog Click Campaign.\n\nOwner note: open the site, enter 1986, then use Create Customer Code for this Device ID.`);
   sendJson(response, 200, {
     ownerEmail,
     mailto: `mailto:${ownerEmail}?subject=${subject}&body=${bodyText}`,
     message: `Request ready. The device password was generated for ${deviceId}.`,
   });
+}
+
+async function createCustomerAccess(request, response) {
+  const body = await readJson(request);
+  const deviceId = String(body.deviceId || "").trim();
+  const ownerPassword = String(body.ownerPassword || "").trim();
+  if (ownerPassword !== masterAccessPassword) {
+    sendJson(response, 401, { error: "Owner password required." });
+    return;
+  }
+  if (!deviceId) {
+    sendJson(response, 400, { error: "Device ID is required." });
+    return;
+  }
+
+  const code = createAccessCode(deviceId);
+  accessCodes.set(deviceId, {
+    code,
+    createdAt: accessCodes.get(deviceId)?.createdAt || new Date().toISOString(),
+    lastCreatedAt: new Date().toISOString(),
+  });
+  saveAccessCodes();
+  sendJson(response, 200, { deviceId, code });
 }
 
 async function verifyAccess(request, response) {
@@ -164,7 +185,8 @@ async function verifyAccess(request, response) {
   }
 
   const record = accessCodes.get(deviceId);
-  if (record?.code && password.toUpperCase() === String(record.code).toUpperCase()) {
+  const expectedCode = record?.code || createAccessCode(deviceId);
+  if (password.toUpperCase() === String(expectedCode).toUpperCase()) {
     sendJson(response, 200, { token: signAccessToken(deviceId, "device"), accessType: "device" });
     return;
   }
@@ -788,6 +810,18 @@ const server = http.createServer((request, response) => {
 
     verifyAccess(request, response).catch((error) => {
       sendJson(response, 500, { error: `Access check failed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/access/create") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { error: "Method not allowed" });
+      return;
+    }
+
+    createCustomerAccess(request, response).catch((error) => {
+      sendJson(response, 500, { error: `Code creation failed: ${error.message}` });
     });
     return;
   }
