@@ -2,7 +2,7 @@ services:
   - type: web
     runtime: node
     name: fog-click-campaign
-    plan: starter
+    plan: free
     buildCommand: npm install
     startCommand: npm start
     envVars:
