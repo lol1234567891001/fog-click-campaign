@@ -808,7 +808,7 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
     }
 
-    body.has-room .room-controls {
+    body.has-room.is-playing .room-controls {
       display: none;
     }
 
@@ -1551,6 +1551,7 @@
     function goBackOneScreen() {
       if (document.body.classList.contains("is-playing")) {
         document.body.classList.remove("is-playing");
+        document.body.classList.add("is-configuring");
       } else if (document.body.classList.contains("is-configuring")) {
         document.body.classList.remove("is-configuring");
       } else if (document.body.classList.contains("has-started")) {
@@ -2042,13 +2043,14 @@
     }
 
     function setRoomStatus(text) {
-      roomStatus.textContent = text;
       if (currentRoom) {
         document.body.classList.add("has-room");
         document.querySelector(".room-badge-code").textContent = currentRoom;
+        roomStatus.textContent = `Room ${currentRoom}. ${text}`;
       } else {
         document.body.classList.remove("has-room");
         document.querySelector(".room-badge-code").textContent = "-----";
+        roomStatus.textContent = text;
       }
       saveState();
     }
