@@ -363,7 +363,10 @@
 
     .power-breakdown,
     .scan-output,
-    .memory-output {
+    .memory-output,
+    .abilities-output,
+    .senses-output,
+    .gear-output {
       min-height: 76px;
       border: 1px solid rgba(248, 113, 113, 0.22);
       background:
@@ -679,7 +682,8 @@
       font-weight: 800;
     }
 
-    .rate-control {
+    .rate-control,
+    .volume-control {
       width: 140px;
       padding: 0;
       accent-color: #facc15;
@@ -692,7 +696,9 @@
     .voice-select:hover,
     .voice-select:focus-visible,
     .rate-control:hover,
-    .rate-control:focus-visible {
+    .rate-control:focus-visible,
+    .volume-control:hover,
+    .volume-control:focus-visible {
       border-color: #fff;
       background: rgba(255, 255, 255, 0.16);
       outline: none;
@@ -728,6 +734,33 @@
       min-height: 1.2rem;
     }
 
+    .save-controls,
+    .accessibility-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.55rem;
+      margin-top: 0.8rem;
+    }
+
+    .control-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+      padding: 0.45rem 0.65rem;
+      font-weight: 800;
+      cursor: none;
+    }
+
+    .control-toggle input {
+      width: 18px;
+      height: 18px;
+      accent-color: #facc15;
+    }
+
     .room-badge {
       position: absolute;
       top: 0.7rem;
@@ -749,6 +782,34 @@
 
     body.has-room .room-badge {
       display: block;
+    }
+
+    body.high-contrast {
+      --ink: #ffffff;
+      --mist: rgba(80, 0, 0, 0.9);
+    }
+
+    body.high-contrast .hud-panel,
+    body.high-contrast .action-option,
+    body.high-contrast .audio-button {
+      border-color: #ffffff;
+      background-color: rgba(0, 0, 0, 0.92);
+    }
+
+    body.large-text {
+      font-size: 120%;
+    }
+
+    body.easy-font {
+      font-family: Verdana, Arial, Helvetica, sans-serif;
+    }
+
+    body.reduce-motion *,
+    body.reduce-motion *::before,
+    body.reduce-motion *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
     }
 
     .back-button {
@@ -1032,6 +1093,10 @@
             <div class="sheet-details">
               <h3>Player</h3>
               <div class="detail-line">
+                <strong>Name</strong>
+                <input class="setup-player-name-input" type="text" value="Player" aria-label="Player name">
+              </div>
+              <div class="detail-line">
                 <strong>Power</strong>
                 <input class="class-input" type="text" value="Wanderer" aria-label="Power or class">
               </div>
@@ -1045,6 +1110,25 @@
               </div>
               <label for="appearanceInput" class="stat-name">Appearance</label>
               <textarea class="sheet-textarea appearance-input" id="appearanceInput" placeholder="Example: 6'5, black hair, blue eyes"></textarea>
+              <label for="abilitiesInput" class="stat-name">Abilities</label>
+              <textarea class="sheet-textarea abilities-input" id="abilitiesInput" placeholder="List active abilities, attacks, transformations, techniques, tools..."></textarea>
+              <label for="sensesInput" class="stat-name">Passive Senses</label>
+              <textarea class="sheet-textarea senses-input" id="sensesInput" placeholder="Energy sensing, suit scans, danger sense, smell, hearing, radar..."></textarea>
+              <label for="gearInput" class="stat-name">Gear</label>
+              <textarea class="sheet-textarea gear-input" id="gearInput" placeholder="Weapons, armor, suit AI, cursed tools, inventory..."></textarea>
+              <h3>Campaign Settings</h3>
+              <div class="detail-line">
+                <strong>Tone</strong>
+                <input class="tone-input" type="text" value="Gritty cinematic" aria-label="Campaign tone">
+              </div>
+              <div class="detail-line">
+                <strong>Difficulty</strong>
+                <input class="difficulty-input" type="text" value="Dangerous" aria-label="Campaign difficulty">
+              </div>
+              <div class="detail-line">
+                <strong>Canon</strong>
+                <input class="canon-input" type="text" value="Canon characters allowed" aria-label="Canon rules">
+              </div>
               <button class="continue-button" type="button">Continue</button>
             </div>
             <div class="character-body">
@@ -1140,6 +1224,18 @@
               <div class="power-breakdown">Your power details will appear here when the campaign starts.</div>
             </section>
             <section class="console-section">
+              <h3>Abilities</h3>
+              <div class="abilities-output">No abilities recorded yet.</div>
+            </section>
+            <section class="console-section">
+              <h3>Passive Senses</h3>
+              <div class="senses-output">No passive senses recorded yet.</div>
+            </section>
+            <section class="console-section">
+              <h3>Gear</h3>
+              <div class="gear-output">No gear recorded yet.</div>
+            </section>
+            <section class="console-section">
               <h3>Scaling</h3>
               <div class="play-stat-grid"></div>
             </section>
@@ -1175,6 +1271,26 @@
                 <input class="auto-read-toggle" type="checkbox">
                 Auto-read
               </label>
+              <label class="audio-toggle">
+                <input class="sound-toggle" type="checkbox" checked>
+                Sounds
+              </label>
+              <label class="rate-wrap">
+                Volume
+                <input class="volume-control" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Sound volume">
+              </label>
+            </div>
+            <div class="accessibility-controls" aria-label="Accessibility controls">
+              <label class="control-toggle"><input class="high-contrast-toggle" type="checkbox">High contrast</label>
+              <label class="control-toggle"><input class="large-text-toggle" type="checkbox">Big text</label>
+              <label class="control-toggle"><input class="easy-font-toggle" type="checkbox">Easy font</label>
+              <label class="control-toggle"><input class="reduce-motion-toggle" type="checkbox">Less motion</label>
+            </div>
+            <div class="save-controls" aria-label="Campaign save controls">
+              <button class="audio-button save-campaign" type="button">Save Campaign</button>
+              <input class="room-input campaign-code-input" type="text" placeholder="Save code" aria-label="Campaign save code">
+              <button class="audio-button load-campaign" type="button">Load Campaign</button>
+              <div class="room-status campaign-save-status">Local autosave is on.</div>
             </div>
             <div class="chat-log game-log" aria-live="polite">
               <p class="chat-message"><strong>Narrator:</strong> Your journey begins. Type what you try to do, and the world will judge it against your sheet.</p>
@@ -1222,7 +1338,7 @@
       introAudioContext = new AudioContext();
       const master = introAudioContext.createGain();
       master.gain.setValueAtTime(0.0001, introAudioContext.currentTime);
-      master.gain.exponentialRampToValueAtTime(0.12, introAudioContext.currentTime + 1.2);
+      master.gain.exponentialRampToValueAtTime(0.12 * Number(document.querySelector(".volume-control")?.value || 0.75), introAudioContext.currentTime + 1.2);
       master.connect(introAudioContext.destination);
       introMusicNodes.push(master);
 
@@ -1275,6 +1391,7 @@
     }
 
     function playButtonSound() {
+      if (!document.querySelector(".sound-toggle")?.checked) return;
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
 
@@ -1290,7 +1407,7 @@
       const notes = [523.25, 659.25, 783.99];
 
       master.gain.setValueAtTime(0.0001, now);
-      master.gain.exponentialRampToValueAtTime(0.16, now + 0.018);
+      master.gain.exponentialRampToValueAtTime(0.16 * Number(document.querySelector(".volume-control")?.value || 0.75), now + 0.018);
       master.gain.exponentialRampToValueAtTime(0.0001, now + 0.72);
 
       filter.type = "lowpass";
@@ -1321,6 +1438,7 @@
     }
 
     function playAlertSound(type = "scan") {
+      if (!document.querySelector(".sound-toggle")?.checked) return;
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       if (!AudioContext) return;
 
@@ -1339,7 +1457,7 @@
       filter.type = "lowpass";
       filter.frequency.value = type === "danger" ? 680 : 2400;
       gain.gain.setValueAtTime(0.0001, now);
-      gain.gain.exponentialRampToValueAtTime(type === "danger" ? 0.22 : 0.12, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime((type === "danger" ? 0.22 : 0.12) * Number(document.querySelector(".volume-control")?.value || 0.75), now + 0.025);
       gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "danger" ? 0.9 : 0.42));
 
       oscillator.connect(filter);
@@ -1433,10 +1551,17 @@
     function saveState() {
       const state = {
         stage: document.body.classList.contains("is-playing") ? "playing" : document.body.classList.contains("has-started") ? "setup" : document.body.classList.contains("has-continued") ? "journey" : "fog",
+        playerName: document.querySelector(".setup-player-name-input").value,
         power: document.querySelector(".class-input").value,
         universe: document.querySelector(".universe-input").value,
         fate: document.querySelector(".fate-input").value,
         appearance: document.querySelector(".appearance-input").value,
+        abilities: document.querySelector(".abilities-input").value,
+        senses: document.querySelector(".senses-input").value,
+        gear: document.querySelector(".gear-input").value,
+        tone: document.querySelector(".tone-input").value,
+        difficulty: document.querySelector(".difficulty-input").value,
+        canon: document.querySelector(".canon-input").value,
         idea: ideaInput.value,
         stats: getStatScaling(),
         chatHistory,
@@ -1445,6 +1570,9 @@
         powerBreakdown: document.querySelector(".power-breakdown")?.textContent || "",
         scan: document.querySelector(".scan-output")?.textContent || "",
         memory: document.querySelector(".memory-output")?.textContent || "",
+        abilitiesOutput: document.querySelector(".abilities-output")?.textContent || "",
+        sensesOutput: document.querySelector(".senses-output")?.textContent || "",
+        gearOutput: document.querySelector(".gear-output")?.textContent || "",
         room: currentRoom,
         player: currentPlayer,
       };
@@ -1496,10 +1624,19 @@
       });
 
       return {
+        playerName: document.querySelector(".setup-player-name-input").value || "Player",
         power: document.querySelector(".class-input").value || "Wanderer",
         universe: document.querySelector(".universe-input").value || "Original fantasy",
         fate: document.querySelector(".fate-input").value || "Unwritten",
         appearance: document.querySelector(".appearance-input").value || "Unwritten",
+        abilities: document.querySelector(".abilities-input").value || "Unwritten",
+        senses: document.querySelector(".senses-input").value || "Unwritten",
+        gear: document.querySelector(".gear-input").value || "Unwritten",
+        campaign: {
+          tone: document.querySelector(".tone-input").value || "Gritty cinematic",
+          difficulty: document.querySelector(".difficulty-input").value || "Dangerous",
+          canon: document.querySelector(".canon-input").value || "Canon characters allowed",
+        },
         idea: ideaInput.value || "Unwritten",
         stats,
       };
@@ -1513,7 +1650,13 @@
         `Power: ${sheet.power}\n` +
         `Universe: ${sheet.universe}\n` +
         `Appearance: ${sheet.appearance}\n\n` +
+        `Tone: ${sheet.campaign.tone}\n` +
+        `Difficulty: ${sheet.campaign.difficulty}\n` +
+        `Canon: ${sheet.campaign.canon}\n\n` +
         `Notes: ${sheet.idea || "No extra character notes yet."}`;
+      document.querySelector(".abilities-output").textContent = sheet.abilities;
+      document.querySelector(".senses-output").textContent = sheet.senses;
+      document.querySelector(".gear-output").textContent = sheet.gear;
       const grid = document.querySelector(".play-stat-grid");
       grid.innerHTML = "";
 
@@ -1726,6 +1869,47 @@
       }
     });
 
+    function applyAccessibilitySettings() {
+      document.body.classList.toggle("high-contrast", document.querySelector(".high-contrast-toggle").checked);
+      document.body.classList.toggle("large-text", document.querySelector(".large-text-toggle").checked);
+      document.body.classList.toggle("easy-font", document.querySelector(".easy-font-toggle").checked);
+      document.body.classList.toggle("reduce-motion", document.querySelector(".reduce-motion-toggle").checked);
+      saveState();
+    }
+
+    document.querySelectorAll(".high-contrast-toggle, .large-text-toggle, .easy-font-toggle, .reduce-motion-toggle, .sound-toggle, .volume-control").forEach((control) => {
+      control.addEventListener("input", applyAccessibilitySettings);
+      control.addEventListener("change", applyAccessibilitySettings);
+    });
+
+    async function saveCampaignOnline() {
+      const response = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: localStorage.getItem(saveKey) || JSON.stringify({ sheet: getCharacterSheet() }),
+      });
+      const data = await response.json();
+      document.querySelector(".campaign-code-input").value = data.code || "";
+      document.querySelector(".campaign-save-status").textContent = data.code ? `Saved. Code: ${data.code}` : (data.error || "Save failed.");
+      saveState();
+    }
+
+    async function loadCampaignOnline() {
+      const code = document.querySelector(".campaign-code-input").value.trim().toUpperCase();
+      if (!code) return;
+      const response = await fetch(`/api/campaigns/${code}`);
+      const data = await response.json();
+      if (data.error) {
+        document.querySelector(".campaign-save-status").textContent = data.error;
+        return;
+      }
+      localStorage.setItem(saveKey, JSON.stringify(data.state));
+      location.reload();
+    }
+
+    document.querySelector(".save-campaign").addEventListener("click", saveCampaignOnline);
+    document.querySelector(".load-campaign").addEventListener("click", loadCampaignOnline);
+
     document.querySelectorAll(".action-option").forEach((button) => {
       button.addEventListener("click", () => sendGameAction(button.dataset.action || button.textContent));
     });
@@ -1847,7 +2031,7 @@
     document.querySelector(".join-room").addEventListener("click", joinRoom);
     setInterval(syncRoom, 2500);
 
-    document.querySelectorAll(".class-input, .universe-input, .fate-input, .appearance-input, #characterIdea").forEach((input) => {
+    document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .tone-input, .difficulty-input, .canon-input, #characterIdea").forEach((input) => {
       input.addEventListener("input", saveState);
     });
 
@@ -1857,10 +2041,17 @@
 
       try {
         const state = JSON.parse(raw);
+        document.querySelector(".setup-player-name-input").value = state.playerName || "Player";
         document.querySelector(".class-input").value = state.power || "Wanderer";
         document.querySelector(".universe-input").value = state.universe || "Original fantasy";
         document.querySelector(".fate-input").value = state.fate || "Unwritten";
         document.querySelector(".appearance-input").value = state.appearance || "";
+        document.querySelector(".abilities-input").value = state.abilities || "";
+        document.querySelector(".senses-input").value = state.senses || "";
+        document.querySelector(".gear-input").value = state.gear || "";
+        document.querySelector(".tone-input").value = state.tone || "Gritty cinematic";
+        document.querySelector(".difficulty-input").value = state.difficulty || "Dangerous";
+        document.querySelector(".canon-input").value = state.canon || "Canon characters allowed";
         ideaInput.value = state.idea || "";
         playerNameInput.value = state.player || "";
         roomCodeInput.value = state.room || "";
@@ -1889,6 +2080,9 @@
           if (state.powerBreakdown) document.querySelector(".power-breakdown").textContent = state.powerBreakdown;
           if (state.scan) document.querySelector(".scan-output").textContent = state.scan;
           if (state.memory) document.querySelector(".memory-output").textContent = state.memory;
+          if (state.abilitiesOutput) document.querySelector(".abilities-output").textContent = state.abilitiesOutput;
+          if (state.sensesOutput) document.querySelector(".senses-output").textContent = state.sensesOutput;
+          if (state.gearOutput) document.querySelector(".gear-output").textContent = state.gearOutput;
         }
 
         if (chatHistory.length) {

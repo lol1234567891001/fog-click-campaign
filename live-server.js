@@ -9,6 +9,35 @@ const isProduction = process.env.NODE_ENV === "production";
 const clients = new Set();
 const openRouterModel = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 const rooms = new Map();
+const dataDir = path.join(root, "data");
+const campaignsPath = path.join(dataDir, "campaigns.json");
+const campaigns = new Map();
+
+function loadCampaigns() {
+  try {
+    if (!fs.existsSync(campaignsPath)) return;
+    const parsed = JSON.parse(fs.readFileSync(campaignsPath, "utf8"));
+    Object.entries(parsed).forEach(([code, state]) => campaigns.set(code, state));
+  } catch (error) {
+    console.warn("Could not load campaigns", error);
+  }
+}
+
+function saveCampaigns() {
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(campaignsPath, JSON.stringify(Object.fromEntries(campaigns), null, 2));
+}
+
+function createSaveCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let index = 0; index < 6; index += 1) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return campaigns.has(code) ? createSaveCode() : code;
+}
+
+loadCampaigns();
 
 const liveReloadScript = `
 <script>
@@ -178,7 +207,7 @@ async function gameMaster(request, response) {
         {
           role: "system",
           content:
-            "You are a gritty solo campaign game master. Use the character sheet as hard context for what the player can do. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling or power, narrate an attempted failure clearly, for example: 'You try, but you are not strong enough.' Do not grant new powers or rewrite the sheet unless the player earns it. Keep continuity from history. Style: tense, cinematic, sensory, direct, dangerous; avoid cheerful tutorial phrasing. Return only valid JSON with this shape: {\"message\":\"1-2 gritty paragraphs plus a short 'What do you do?' line\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"optional updated power console text or empty string\",\"memory\":\"updated canon/memory notes or empty string\",\"choices\":[\"2-4 short action choices\"],\"threat\":true_or_false}. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's power and scaling: a tech suit might report signatures, motion, heat, energy, or tactical threats; cursed energy sensing should report cursed energy presence and pressure; mana sensing should report mana density or nearby magic; weak senses should give vague results and strong senses should give clearer results. Set threat true when danger, hostile energy, pursuit, injury, or alarm is present. Keep memory as concise canon: current objective, injuries, allies, enemies, learned facts, power limits.",
+            "You are a gritty solo campaign game master. Use the character sheet, campaign settings, abilities, passive senses, gear, and stat scaling as hard context for what the player can do. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling, abilities, passive senses, or gear, narrate an attempted failure clearly. Do not grant new powers or rewrite the sheet unless earned. Follow the selected tone, difficulty, and canon rules. Keep continuity from history. Style: tense, cinematic, sensory, direct, dangerous; avoid cheerful tutorial phrasing. Return only valid JSON with this shape: {\"message\":\"1-2 gritty paragraphs plus a short 'What do you do?' line\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"optional updated power console text or empty string\",\"memory\":\"updated canon/memory notes or empty string\",\"choices\":[\"2-4 short action choices\"],\"threat\":true_or_false}. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's passive senses, gear, power, and scaling. Set threat true when danger, hostile energy, pursuit, injury, or alarm is present. Keep memory as concise canon: current objective, injuries, allies, enemies, learned facts, and power limits.",
         },
         {
           role: "user",
@@ -412,6 +441,30 @@ const server = http.createServer((request, response) => {
         sendJson(response, 200, roomSnapshot(room));
       })
       .catch((error) => sendJson(response, 500, { error: error.message }));
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/campaigns" && request.method === "POST") {
+    readJson(request)
+      .then((state) => {
+        const code = createSaveCode();
+        campaigns.set(code, { ...state, savedAt: new Date().toISOString() });
+        saveCampaigns();
+        sendJson(response, 200, { code });
+      })
+      .catch((error) => sendJson(response, 500, { error: error.message }));
+    return;
+  }
+
+  const campaignMatch = requestUrl.pathname.match(/^\/api\/campaigns\/([A-Z0-9]+)$/);
+  if (campaignMatch && request.method === "GET") {
+    const code = campaignMatch[1].toUpperCase();
+    const state = campaigns.get(code);
+    if (!state) {
+      sendJson(response, 404, { error: `Campaign ${code} was not found.` });
+      return;
+    }
+    sendJson(response, 200, { code, state });
     return;
   }
 
