@@ -432,8 +432,9 @@ async function scaleStats(request, response) {
     `Passive senses: ${String(body.senses || "Unwritten")}\n` +
     `Gear: ${String(body.gear || "Unwritten")}\n` +
     `Campaign settings: ${JSON.stringify(body.campaign || {})}\n` +
+    `Story recap / prior canon: ${String(body.storyRecap || body.recap || "No prior story recap")}\n` +
     `Character idea: ${String(body.characterIdea || "No extra idea")}\n\n` +
-    "Scale the character's base stats to the chosen universe. Use comparison language, not numbers. " +
+    "Scale the character's current stats to the chosen universe and the story recap. Include earned growth, injuries, feats, transformations, gear upgrades, or losses from the recap when relevant. Use comparison language, not numbers. " +
     "For each stat, compare to known tiers or characters from that universe if useful. " +
     "If the user mentions a copyrighted universe, comparisons are allowed but do not write long copied lore.";
 

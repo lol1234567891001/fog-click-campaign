@@ -1828,6 +1828,7 @@
           body: JSON.stringify({
             ...getCharacterSheet(),
             characterIdea: ideaInput.value,
+            storyRecap: document.querySelector(".recap-input").value,
           }),
         });
         const data = await response.json();
