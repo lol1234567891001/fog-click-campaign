@@ -6,6 +6,9 @@ This app is now deployable as a Node web service.
 
 - `OPENROUTER_API_KEY`: your OpenRouter API key
 - `OPENROUTER_MODEL`: optional, defaults to `openai/gpt-4o-mini`
+- `ELEVENLABS_API_KEY`: optional, enables AI narrator audio
+- `ELEVENLABS_VOICE_NAME`: optional, defaults to `Jonathan Livingston`
+- `ELEVENLABS_VOICE_ID`: optional, use this instead of voice name when you have the exact voice ID
 - `NODE_ENV`: `production`
 
 Do not put API keys in `index.html` or commit them to Git.

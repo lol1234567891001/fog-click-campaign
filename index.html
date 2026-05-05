@@ -1743,20 +1743,46 @@
     const roomStatus = document.querySelector(".room-status");
     const roomCodeInput = document.querySelector(".room-code-input");
     const playerNameInput = document.querySelector(".player-name-input");
+    let narratorAudio = null;
     let latestNarration = "Your journey begins. Type what you try to do, and the world will judge it against your sheet.";
 
     function cleanSpeechText(text) {
       return text.replace(/\s+/g, " ").replace(/\*\*/g, "").trim();
     }
 
-    function speakText(text) {
+    async function speakText(text) {
+      const cleanText = cleanSpeechText(text);
+      if (narratorAudio) {
+        narratorAudio.pause();
+        URL.revokeObjectURL(narratorAudio.src);
+        narratorAudio = null;
+      }
+
+      try {
+        const response = await fetch("/api/narrate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: cleanText }),
+        });
+
+        if (response.ok) {
+          const blob = await response.blob();
+          narratorAudio = new Audio(URL.createObjectURL(blob));
+          narratorAudio.volume = Number(document.querySelector(".volume-control")?.value || 0.75);
+          await narratorAudio.play();
+          return;
+        }
+      } catch (error) {
+        console.warn("ElevenLabs narration unavailable, using browser voice.", error);
+      }
+
       if (!("speechSynthesis" in window)) {
         appendMessage(gameLog, "Narrator", "Audio reading is not supported in this browser.");
         return;
       }
 
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(cleanSpeechText(text));
+      const utterance = new SpeechSynthesisUtterance(cleanText);
       const voices = window.speechSynthesis.getVoices();
       const selectedVoice = voices.find((voice) => voice.name === voiceSelect.value);
       if (selectedVoice) {
@@ -1864,6 +1890,11 @@
     });
 
     document.querySelector(".stop-reading").addEventListener("click", () => {
+      if (narratorAudio) {
+        narratorAudio.pause();
+        URL.revokeObjectURL(narratorAudio.src);
+        narratorAudio = null;
+      }
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }

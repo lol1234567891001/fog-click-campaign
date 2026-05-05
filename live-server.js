@@ -8,6 +8,8 @@ const host = process.env.HOST || "0.0.0.0";
 const isProduction = process.env.NODE_ENV === "production";
 const clients = new Set();
 const openRouterModel = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
+const elevenLabsVoiceName = process.env.ELEVENLABS_VOICE_NAME || "Jonathan Livingston";
+let cachedElevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID || "";
 const rooms = new Map();
 const dataDir = path.join(root, "data");
 const campaignsPath = path.join(dataDir, "campaigns.json");
@@ -101,6 +103,77 @@ function readJson(request) {
 function sendJson(response, statusCode, data) {
   response.writeHead(statusCode, { "Content-Type": "application/json; charset=utf-8" });
   response.end(JSON.stringify(data));
+}
+
+async function resolveElevenLabsVoiceId(apiKey) {
+  if (cachedElevenLabsVoiceId) return cachedElevenLabsVoiceId;
+
+  const voicesResponse = await fetch("https://api.elevenlabs.io/v1/voices", {
+    headers: { "xi-api-key": apiKey },
+  });
+
+  if (!voicesResponse.ok) {
+    throw new Error(`Could not load ElevenLabs voices: ${await voicesResponse.text()}`);
+  }
+
+  const data = await voicesResponse.json();
+  const voice = data.voices?.find((item) =>
+    String(item.name || "").toLowerCase().includes(elevenLabsVoiceName.toLowerCase())
+  );
+
+  if (!voice?.voice_id) {
+    throw new Error(`Could not find ElevenLabs voice matching "${elevenLabsVoiceName}".`);
+  }
+
+  cachedElevenLabsVoiceId = voice.voice_id;
+  return cachedElevenLabsVoiceId;
+}
+
+async function narrate(request, response) {
+  const apiKey = process.env.ELEVENLABS_API_KEY;
+  if (!apiKey) {
+    sendJson(response, 501, { error: "ELEVENLABS_API_KEY is not set." });
+    return;
+  }
+
+  const body = await readJson(request);
+  const text = String(body.text || "").replace(/\s+/g, " ").trim().slice(0, 1800);
+  if (!text) {
+    sendJson(response, 400, { error: "No text provided." });
+    return;
+  }
+
+  const voiceId = await resolveElevenLabsVoiceId(apiKey);
+  const ttsResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "audio/mpeg",
+      "xi-api-key": apiKey,
+    },
+    body: JSON.stringify({
+      text,
+      model_id: process.env.ELEVENLABS_MODEL_ID || "eleven_multilingual_v2",
+      voice_settings: {
+        stability: Number(process.env.ELEVENLABS_STABILITY || 0.52),
+        similarity_boost: Number(process.env.ELEVENLABS_SIMILARITY || 0.78),
+        style: Number(process.env.ELEVENLABS_STYLE || 0),
+        use_speaker_boost: true,
+      },
+    }),
+  });
+
+  if (!ttsResponse.ok) {
+    sendJson(response, 502, { error: `ElevenLabs failed: ${await ttsResponse.text()}` });
+    return;
+  }
+
+  const audio = Buffer.from(await ttsResponse.arrayBuffer());
+  response.writeHead(200, {
+    "Content-Type": "audio/mpeg",
+    "Cache-Control": "no-store",
+  });
+  response.end(audio);
 }
 
 async function characterGuide(request, response) {
@@ -421,6 +494,18 @@ const server = http.createServer((request, response) => {
 
     scaleStats(request, response).catch((error) => {
       sendJson(response, 500, { message: `The stat scaler crashed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/narrate") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { message: "Method not allowed" });
+      return;
+    }
+
+    narrate(request, response).catch((error) => {
+      sendJson(response, 500, { error: error.message });
     });
     return;
   }

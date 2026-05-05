@@ -12,3 +12,9 @@ services:
         sync: false
       - key: OPENROUTER_MODEL
         value: openai/gpt-4o-mini
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: ELEVENLABS_VOICE_NAME
+        value: Jonathan Livingston
+      - key: ELEVENLABS_MODEL_ID
+        value: eleven_multilingual_v2
