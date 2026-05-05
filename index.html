@@ -1898,26 +1898,8 @@
 
     function loadVoices() {
       if (!("speechSynthesis" in window)) return;
-      const preferredNames = ["Guy", "Jenny", "Aria", "Ryan", "Sonia", "Mark", "Zira", "David"];
-      const englishVoices = window.speechSynthesis.getVoices()
-        .filter((voice) => /^en[-_]/i.test(voice.lang || "") || /English/i.test(voice.name || ""));
-      let voices = englishVoices
-        .filter((voice) => {
-          const name = voice.name || "";
-          const isMicrosoft = /Microsoft/i.test(name);
-          const isNatural = /Natural|Online/i.test(name);
-          const isPreferred = preferredNames.some((preferred) => name.toLowerCase().includes(preferred.toLowerCase()));
-          return isMicrosoft && (isNatural || isPreferred);
-        })
-        .sort((a, b) => {
-          const aNatural = /Natural|Online/i.test(a.name) ? 0 : 1;
-          const bNatural = /Natural|Online/i.test(b.name) ? 0 : 1;
-          if (aNatural !== bNatural) return aNatural - bNatural;
-          return a.name.localeCompare(b.name);
-        });
-      if (!voices.length) {
-        voices = englishVoices.slice(0, 8);
-      }
+      const voices = window.speechSynthesis.getVoices()
+        .sort((a, b) => a.name.localeCompare(b.name));
       const currentValue = voiceSelect.value;
       voiceSelect.innerHTML = '<option value="">Browser fallback voice</option>';
 
