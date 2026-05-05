@@ -1792,9 +1792,13 @@
           }),
         });
         const data = await response.json();
+        if (!response.ok || data.error) {
+          box.textContent = `Power Breakdown AI error:\n${data.message || data.error || "Request failed."}`;
+          return;
+        }
         box.textContent = data.powerBreakdown || data.message || previous;
       } catch (error) {
-        box.textContent = previous || "Power Breakdown AI could not update.";
+        box.textContent = `Power Breakdown AI could not update:\n${error.message || error}`;
       }
       saveState();
     }
@@ -2013,6 +2017,8 @@
             sheet: getCharacterSheet(),
             action,
             history: gameHistory,
+            currentPowerBreakdown: document.querySelector(".game-power-breakdown").textContent,
+            trackerInstructions: document.querySelector(".breakdown-live-input")?.value || "",
           }),
         });
         const data = await response.json();
