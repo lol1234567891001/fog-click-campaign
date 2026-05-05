@@ -1930,6 +1930,14 @@
 
       if ([...voiceSelect.options].some((option) => option.value === currentValue)) {
         voiceSelect.value = currentValue;
+      } else {
+        const guyVoice = voices.find((voice) =>
+          /guy/i.test(voice.name || "") &&
+          (/en[-_]us/i.test(voice.lang || "") || /english.*united states|en-us/i.test(voice.name || ""))
+        );
+        if (guyVoice) {
+          voiceSelect.value = guyVoice.name;
+        }
       }
     }
 
