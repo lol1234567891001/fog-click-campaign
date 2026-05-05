@@ -3346,6 +3346,21 @@
       return [current, block].filter(Boolean).join("\n\n");
     }
 
+    function removeSectionText(current, heading, text) {
+      const cleanText = String(text || "").trim();
+      if (!cleanText) return current || "";
+      const block = `${heading}:\n${cleanText}`;
+      return String(current || "")
+        .split(/\n{2,}/)
+        .filter((section) => section.trim() !== block)
+        .join("\n\n")
+        .trim();
+    }
+
+    function getKnownPowers() {
+      return [...powerCatalog, ...customPowers.values()];
+    }
+
     function addSuggestionButtons(containerSelector, inputSelector, fieldName) {
       const container = document.querySelector(containerSelector);
       const input = document.querySelector(inputSelector);
@@ -3379,12 +3394,21 @@
       const sensesInput = document.querySelector(".senses-input");
       const gearInput = document.querySelector(".gear-input");
       const breakdownInput = document.querySelector(".breakdown-input");
+      getKnownPowers().forEach((power) => {
+        abilitiesInput.value = removeSectionText(abilitiesInput.value, power.name, power.abilities);
+        sensesInput.value = removeSectionText(sensesInput.value, power.name, power.senses);
+        gearInput.value = removeSectionText(gearInput.value, power.name, power.gear);
+        breakdownInput.value = removeSectionText(breakdownInput.value, power.name, power.tracks);
+      });
 
       selected.forEach((power) => {
         abilitiesInput.value = appendSectionText(abilitiesInput.value, power.name, power.abilities);
         sensesInput.value = appendSectionText(sensesInput.value, power.name, power.senses);
         gearInput.value = appendSectionText(gearInput.value, power.name, power.gear);
         breakdownInput.value = appendSectionText(breakdownInput.value, power.name, power.tracks);
+      });
+      [abilitiesInput, sensesInput, gearInput, breakdownInput].forEach((input) => {
+        input.dispatchEvent(new Event("input", { bubbles: true }));
       });
     }
 
@@ -3404,6 +3428,7 @@
         removeButton.addEventListener("click", () => {
           selectedPowerIds = selectedPowerIds.filter((id) => id !== power.id);
           renderSelectedPowers();
+          mergeSelectedPowerDetails();
           saveState();
         });
         chip.append(removeButton);
