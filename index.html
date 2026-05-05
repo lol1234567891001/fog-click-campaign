@@ -1350,6 +1350,8 @@
             </section>
             <section class="console-section">
               <h3>Power Breakdown</h3>
+              <textarea class="sheet-textarea breakdown-live-input" placeholder="Tell the tracker what to keep tracking. This is not sent as a story action."></textarea>
+              <button class="audio-button update-breakdown-button" type="button">Update Tracker</button>
               <div class="power-breakdown game-power-breakdown">Your power details will appear here when the campaign starts.</div>
             </section>
             <section class="console-section">
@@ -1664,6 +1666,7 @@
         gameHistory,
         latestNarration,
         powerBreakdown: document.querySelector(".game-power-breakdown")?.textContent || "",
+        breakdownLiveInstructions: document.querySelector(".breakdown-live-input")?.value || "",
         scan: document.querySelector(".scan-output")?.textContent || "",
         memory: document.querySelector(".memory-output")?.textContent || "",
         abilitiesOutput: document.querySelector(".abilities-output")?.textContent || "",
@@ -1729,6 +1732,7 @@
         senses: document.querySelector(".senses-input").value || "Unwritten",
         gear: document.querySelector(".gear-input").value || "Unwritten",
         breakdownTracks: document.querySelector(".breakdown-input").value || "Track power growth, current state, and story-relevant power metrics.",
+        breakdownLiveInstructions: document.querySelector(".breakdown-live-input")?.value || "",
         campaign: {
           tone: document.querySelector(".tone-input").value || "Gritty cinematic",
           difficulty: document.querySelector(".difficulty-input").value || "Dangerous",
@@ -1782,6 +1786,7 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             sheet: getCharacterSheet(),
+            trackerInstructions: document.querySelector(".breakdown-live-input")?.value || "",
             currentPowerBreakdown: previous,
             scene,
           }),
@@ -2030,9 +2035,8 @@
         }
         if (data.powerBreakdown) {
           document.querySelector(".game-power-breakdown").textContent = data.powerBreakdown;
-        } else {
-          refreshPowerBreakdown(result);
         }
+        refreshPowerBreakdown(result);
         if (data.memory) {
           document.querySelector(".memory-output").textContent = data.memory;
         }
@@ -2238,7 +2242,7 @@
           }
           if (message.threat) pulseThreat();
           if (message.powerBreakdown) document.querySelector(".game-power-breakdown").textContent = message.powerBreakdown;
-          if (message.speaker === "Narrator" && !message.powerBreakdown) refreshPowerBreakdown(message.text);
+          if (message.speaker === "Narrator") refreshPowerBreakdown(message.text);
           if (message.memory) document.querySelector(".memory-output").textContent = message.memory;
           if (Array.isArray(message.choices) && message.choices.length) renderActionChoices(message.choices);
         });
@@ -2254,8 +2258,12 @@
     document.querySelector(".leave-room").addEventListener("click", leaveRoom);
     setInterval(syncRoom, 2500);
 
-    document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .breakdown-input, .tone-input, .difficulty-input, .canon-input, #characterIdea, .recap-input").forEach((input) => {
+    document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .breakdown-input, .breakdown-live-input, .tone-input, .difficulty-input, .canon-input, #characterIdea, .recap-input").forEach((input) => {
       input.addEventListener("input", saveState);
+    });
+
+    document.querySelector(".update-breakdown-button").addEventListener("click", () => {
+      refreshPowerBreakdown("Manual tracker update. Apply the tracker instructions without treating them as a story action.");
     });
 
     function restoreState() {
@@ -2278,6 +2286,7 @@
         document.querySelector(".canon-input").value = state.canon || "Canon characters allowed";
         ideaInput.value = state.idea || "";
         document.querySelector(".recap-input").value = state.recap || "";
+        document.querySelector(".breakdown-live-input").value = state.breakdownLiveInstructions || "";
         playerNameInput.value = state.player || "";
         roomCodeInput.value = state.room || "";
         currentRoom = state.room || "";
@@ -2306,6 +2315,7 @@
           renderPlaySheet();
           document.body.classList.add("is-playing");
           if (state.powerBreakdown) document.querySelector(".game-power-breakdown").textContent = state.powerBreakdown;
+          if (state.breakdownLiveInstructions) document.querySelector(".breakdown-live-input").value = state.breakdownLiveInstructions;
           if (state.scan) document.querySelector(".scan-output").textContent = state.scan;
           if (state.memory) document.querySelector(".memory-output").textContent = state.memory;
           if (state.abilitiesOutput) document.querySelector(".abilities-output").textContent = state.abilitiesOutput;

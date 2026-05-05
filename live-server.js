@@ -493,6 +493,7 @@ async function powerBreakdown(request, response) {
   const sheet = body.sheet || {};
   const current = String(body.currentPowerBreakdown || "").trim();
   const scene = String(body.scene || "Campaign start").trim();
+  const trackerInstructions = String(body.trackerInstructions || sheet.breakdownLiveInstructions || "").trim();
 
   const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -517,6 +518,7 @@ async function powerBreakdown(request, response) {
           role: "user",
           content:
             `Character sheet JSON:\n${JSON.stringify(sheet, null, 2)}\n\n` +
+            `Live tracker instructions, not story action:\n${trackerInstructions || "None"}\n\n` +
             `Current scene/action:\n${scene}\n\n` +
             `Current power breakdown:\n${current || "None yet"}`,
         },
