@@ -219,6 +219,7 @@
       transition: opacity 650ms ease, transform 650ms ease;
     }
 
+    .settings-screen,
     .play-screen {
       position: absolute;
       inset: 0;
@@ -229,6 +230,37 @@
       opacity: 0;
       transform: translateY(18px);
       transition: opacity 650ms ease, transform 650ms ease;
+    }
+
+    .settings-screen {
+      z-index: 6;
+      display: grid;
+      place-items: center;
+      overflow: auto;
+    }
+
+    .settings-panel {
+      width: min(1040px, 100%);
+      max-height: min(820px, calc(100vh - 2rem));
+      overflow: auto;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+
+    .settings-group {
+      border: 1px solid rgba(248, 113, 113, 0.25);
+      background: rgba(0, 0, 0, 0.18);
+      padding: 1rem;
+    }
+
+    .settings-group h3 {
+      margin: 0 0 0.75rem;
+      color: #fed7aa;
+      text-transform: uppercase;
     }
 
     .play-screen::before {
@@ -1026,16 +1058,35 @@
       transform: scale(1);
     }
 
+    body.is-configuring .character-screen,
     body.is-playing .character-screen {
       opacity: 0;
       pointer-events: none;
       transform: scale(0.98);
     }
 
+    body.is-configuring .settings-screen {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    body.is-playing .settings-screen {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-12px);
+    }
+
     body.is-playing .play-screen {
       opacity: 1;
       pointer-events: auto;
       transform: translateY(0);
+    }
+
+    @media (max-width: 760px) {
+      .settings-grid {
+        grid-template-columns: 1fr;
+      }
     }
 
     @keyframes drift {
@@ -1206,6 +1257,70 @@
         </div>
       </div>
     </section>
+    <section class="settings-screen" aria-label="Game settings">
+      <div class="hud-panel settings-panel">
+        <header class="character-header">
+          <h2>Game Settings</h2>
+          <button class="continue-to-game-button continue-button" type="button">Enter Game</button>
+        </header>
+        <div class="settings-grid">
+          <section class="settings-group">
+            <h3>Multiplayer</h3>
+            <div class="room-controls" aria-label="Multiplayer room controls">
+              <input class="room-input player-name-input" type="text" placeholder="Your name" aria-label="Your player name">
+              <input class="room-input room-code-input" type="text" placeholder="Room code" aria-label="Room code">
+              <button class="audio-button create-room" type="button">Create Room</button>
+              <button class="audio-button join-room" type="button">Join Room</button>
+              <div class="room-status">Solo mode. Create or join a room to wait for both players.</div>
+            </div>
+          </section>
+          <section class="settings-group">
+            <h3>Audio</h3>
+            <div class="audio-controls" aria-label="Audio narration controls">
+              <button class="audio-button read-latest" type="button">Read Latest</button>
+              <button class="audio-button stop-reading" type="button">Stop</button>
+              <select class="voice-select" aria-label="Narration voice">
+                <option value="">Default voice</option>
+              </select>
+              <label class="rate-wrap">
+                Speed
+                <input class="rate-control" type="range" min="0.65" max="1.35" step="0.05" value="0.92" aria-label="Narration speed">
+              </label>
+              <label class="audio-toggle">
+                <input class="auto-read-toggle" type="checkbox">
+                Auto-read
+              </label>
+              <label class="audio-toggle">
+                <input class="sound-toggle" type="checkbox" checked>
+                Sounds
+              </label>
+              <label class="rate-wrap">
+                Volume
+                <input class="volume-control" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Sound volume">
+              </label>
+            </div>
+          </section>
+          <section class="settings-group">
+            <h3>Accessibility</h3>
+            <div class="accessibility-controls" aria-label="Accessibility controls">
+              <label class="control-toggle"><input class="high-contrast-toggle" type="checkbox">High contrast</label>
+              <label class="control-toggle"><input class="large-text-toggle" type="checkbox">Big text</label>
+              <label class="control-toggle"><input class="easy-font-toggle" type="checkbox">Easy font</label>
+              <label class="control-toggle"><input class="reduce-motion-toggle" type="checkbox">Less motion</label>
+            </div>
+          </section>
+          <section class="settings-group">
+            <h3>Saves</h3>
+            <div class="save-controls" aria-label="Campaign save controls">
+              <button class="audio-button save-campaign" type="button">Save Campaign</button>
+              <input class="room-input campaign-code-input" type="text" placeholder="Save code" aria-label="Campaign save code">
+              <button class="audio-button load-campaign" type="button">Load Campaign</button>
+              <div class="room-status campaign-save-status">Local autosave is on.</div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </section>
     <section class="play-screen" aria-label="Adventure">
       <div class="room-badge">Room <span class="room-badge-code">-----</span></div>
       <div class="play-layout">
@@ -1250,48 +1365,6 @@
           </aside>
           <section class="hud-panel game-master">
             <h3>Adventure</h3>
-            <div class="room-controls" aria-label="Multiplayer room controls">
-              <input class="room-input player-name-input" type="text" placeholder="Your name" aria-label="Your player name">
-              <input class="room-input room-code-input" type="text" placeholder="Room code" aria-label="Room code">
-              <button class="audio-button create-room" type="button">Create Room</button>
-              <button class="audio-button join-room" type="button">Join Room</button>
-              <div class="room-status">Solo mode. Create or join a room to wait for both players.</div>
-            </div>
-            <div class="audio-controls" aria-label="Audio narration controls">
-              <button class="audio-button read-latest" type="button">Read Latest</button>
-              <button class="audio-button stop-reading" type="button">Stop</button>
-              <select class="voice-select" aria-label="Narration voice">
-                <option value="">Default voice</option>
-              </select>
-              <label class="rate-wrap">
-                Speed
-                <input class="rate-control" type="range" min="0.65" max="1.35" step="0.05" value="0.92" aria-label="Narration speed">
-              </label>
-              <label class="audio-toggle">
-                <input class="auto-read-toggle" type="checkbox">
-                Auto-read
-              </label>
-              <label class="audio-toggle">
-                <input class="sound-toggle" type="checkbox" checked>
-                Sounds
-              </label>
-              <label class="rate-wrap">
-                Volume
-                <input class="volume-control" type="range" min="0" max="1" step="0.05" value="0.75" aria-label="Sound volume">
-              </label>
-            </div>
-            <div class="accessibility-controls" aria-label="Accessibility controls">
-              <label class="control-toggle"><input class="high-contrast-toggle" type="checkbox">High contrast</label>
-              <label class="control-toggle"><input class="large-text-toggle" type="checkbox">Big text</label>
-              <label class="control-toggle"><input class="easy-font-toggle" type="checkbox">Easy font</label>
-              <label class="control-toggle"><input class="reduce-motion-toggle" type="checkbox">Less motion</label>
-            </div>
-            <div class="save-controls" aria-label="Campaign save controls">
-              <button class="audio-button save-campaign" type="button">Save Campaign</button>
-              <input class="room-input campaign-code-input" type="text" placeholder="Save code" aria-label="Campaign save code">
-              <button class="audio-button load-campaign" type="button">Load Campaign</button>
-              <div class="room-status campaign-save-status">Local autosave is on.</div>
-            </div>
             <div class="chat-log game-log" aria-live="polite">
               <p class="chat-message"><strong>Narrator:</strong> Your journey begins. Type what you try to do, and the world will judge it against your sheet.</p>
             </div>
@@ -1478,6 +1551,8 @@
     function goBackOneScreen() {
       if (document.body.classList.contains("is-playing")) {
         document.body.classList.remove("is-playing");
+      } else if (document.body.classList.contains("is-configuring")) {
+        document.body.classList.remove("is-configuring");
       } else if (document.body.classList.contains("has-started")) {
         document.body.classList.remove("has-started");
         stopIntroMusic();
@@ -1550,7 +1625,7 @@
 
     function saveState() {
       const state = {
-        stage: document.body.classList.contains("is-playing") ? "playing" : document.body.classList.contains("has-started") ? "setup" : document.body.classList.contains("has-continued") ? "journey" : "fog",
+        stage: document.body.classList.contains("is-playing") ? "playing" : document.body.classList.contains("is-configuring") ? "settings" : document.body.classList.contains("has-started") ? "setup" : document.body.classList.contains("has-continued") ? "journey" : "fog",
         playerName: document.querySelector(".setup-player-name-input").value,
         power: document.querySelector(".class-input").value,
         universe: document.querySelector(".universe-input").value,
@@ -1816,8 +1891,14 @@
       window.speechSynthesis.addEventListener("voiceschanged", loadVoices);
     }
 
-    document.querySelector(".continue-button").addEventListener("click", () => {
+    document.querySelector(".character-screen .continue-button").addEventListener("click", () => {
+      document.body.classList.add("is-configuring");
+      saveState();
+    });
+
+    document.querySelector(".continue-to-game-button").addEventListener("click", () => {
       renderPlaySheet();
+      document.body.classList.remove("is-configuring");
       document.body.classList.add("is-playing");
       saveState();
       if (document.querySelector(".auto-read-toggle").checked) {
@@ -2099,11 +2180,14 @@
         gameHistory.splice(0, gameHistory.length, ...(state.gameHistory || []));
         latestNarration = state.latestNarration || latestNarration;
 
-        if (state.stage === "journey" || state.stage === "setup" || state.stage === "playing") {
+        if (state.stage === "journey" || state.stage === "setup" || state.stage === "settings" || state.stage === "playing") {
           document.body.classList.add("has-continued");
         }
-        if (state.stage === "setup" || state.stage === "playing") {
+        if (state.stage === "setup" || state.stage === "settings" || state.stage === "playing") {
           document.body.classList.add("has-started");
+        }
+        if (state.stage === "settings") {
+          document.body.classList.add("is-configuring");
         }
         if (state.stage === "playing") {
           renderPlaySheet();
