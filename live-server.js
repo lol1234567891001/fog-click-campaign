@@ -2,6 +2,7 @@ const fs = require("fs");
 const http = require("http");
 const net = require("net");
 const path = require("path");
+const crypto = require("crypto");
 
 const root = __dirname;
 loadDotEnv(path.join(root, ".env"));
@@ -12,10 +13,15 @@ const clients = new Set();
 const openRouterModel = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 const elevenLabsVoiceName = process.env.ELEVENLABS_VOICE_NAME || "Jonathan Livingston";
 let cachedElevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID || "";
+const ownerEmail = process.env.ACCESS_OWNER_EMAIL || "ellisonbrayden5@gmail.com";
+const masterAccessPassword = process.env.MASTER_ACCESS_PASSWORD || "1986";
+const accessSecret = process.env.ACCESS_TOKEN_SECRET || process.env.OPENROUTER_API_KEY || "fog-click-local-secret";
 const rooms = new Map();
 const dataDir = path.join(root, "data");
 const campaignsPath = path.join(dataDir, "campaigns.json");
+const accessCodesPath = path.join(dataDir, "access-codes.json");
 const campaigns = new Map();
+const accessCodes = new Map();
 
 function loadDotEnv(filePath) {
   try {
@@ -62,7 +68,112 @@ function createSaveCode() {
   return campaigns.has(code) ? createSaveCode() : code;
 }
 
+function loadAccessCodes() {
+  try {
+    if (!fs.existsSync(accessCodesPath)) return;
+    const parsed = JSON.parse(fs.readFileSync(accessCodesPath, "utf8"));
+    Object.entries(parsed).forEach(([deviceId, record]) => accessCodes.set(deviceId, record));
+  } catch (error) {
+    console.warn("Could not load access codes", error);
+  }
+}
+
+function saveAccessCodes() {
+  fs.mkdirSync(dataDir, { recursive: true });
+  fs.writeFileSync(accessCodesPath, JSON.stringify(Object.fromEntries(accessCodes), null, 2));
+}
+
+function createAccessCode() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let index = 0; index < 8; index += 1) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return code;
+}
+
+function signAccessToken(deviceId, accessType) {
+  const payload = Buffer.from(JSON.stringify({
+    deviceId,
+    accessType,
+    expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 180,
+  })).toString("base64url");
+  const signature = crypto.createHmac("sha256", accessSecret).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function verifyAccessToken(token) {
+  if (!token || !token.includes(".")) return null;
+  const [payload, signature] = token.split(".");
+  const expected = crypto.createHmac("sha256", accessSecret).update(payload).digest("base64url");
+  if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  const parsed = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+  return parsed.expiresAt > Date.now() ? parsed : null;
+}
+
+function requireAccess(request, response) {
+  const token = request.headers["x-access-token"];
+  try {
+    if (verifyAccessToken(token)) return true;
+  } catch (error) {
+    // Fall through to the unauthorized response.
+  }
+  sendJson(response, 401, { error: "Access password required." });
+  return false;
+}
+
+async function requestAccess(request, response) {
+  const body = await readJson(request);
+  const deviceId = String(body.deviceId || "").trim();
+  if (!deviceId) {
+    sendJson(response, 400, { error: "Device ID is required." });
+    return;
+  }
+
+  const existing = accessCodes.get(deviceId);
+  const code = existing?.code || createAccessCode();
+  accessCodes.set(deviceId, {
+    code,
+    createdAt: existing?.createdAt || new Date().toISOString(),
+    lastRequestedAt: new Date().toISOString(),
+  });
+  saveAccessCodes();
+
+  console.log(`Access request for ${deviceId}. Device password: ${code}`);
+  const subject = encodeURIComponent("Fog Click Campaign access request");
+  const bodyText = encodeURIComponent(`Device ID: ${deviceId}\nRequested password for Fog Click Campaign.`);
+  sendJson(response, 200, {
+    ownerEmail,
+    mailto: `mailto:${ownerEmail}?subject=${subject}&body=${bodyText}`,
+    message: `Request ready. The device password was generated for ${deviceId}.`,
+  });
+}
+
+async function verifyAccess(request, response) {
+  const body = await readJson(request);
+  const deviceId = String(body.deviceId || "").trim();
+  const password = String(body.password || "").trim();
+  if (!deviceId || !password) {
+    sendJson(response, 400, { error: "Device ID and password are required." });
+    return;
+  }
+
+  if (password === masterAccessPassword) {
+    sendJson(response, 200, { token: signAccessToken(deviceId, "owner"), accessType: "owner" });
+    return;
+  }
+
+  const record = accessCodes.get(deviceId);
+  if (record?.code && password.toUpperCase() === String(record.code).toUpperCase()) {
+    sendJson(response, 200, { token: signAccessToken(deviceId, "device"), accessType: "device" });
+    return;
+  }
+
+  sendJson(response, 401, { error: "That password does not match this device." });
+}
+
 loadCampaigns();
+loadAccessCodes();
 
 const liveReloadScript = `
 <script>
@@ -653,7 +764,35 @@ const server = http.createServer((request, response) => {
     });
     response.write("\n");
     clients.add(response);
-    request.on("close", () => clients.delete(response));
+  request.on("close", () => clients.delete(response));
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/access/request") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { error: "Method not allowed" });
+      return;
+    }
+
+    requestAccess(request, response).catch((error) => {
+      sendJson(response, 500, { error: `Access request failed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/access/verify") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { error: "Method not allowed" });
+      return;
+    }
+
+    verifyAccess(request, response).catch((error) => {
+      sendJson(response, 500, { error: `Access check failed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname.startsWith("/api/") && !requireAccess(request, response)) {
     return;
   }
 

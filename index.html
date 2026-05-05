@@ -1693,9 +1693,120 @@
         transform: translateY(-12px) scale(1.02);
       }
     }
+
+    .access-gate {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: grid;
+      place-items: center;
+      padding: clamp(1rem, 4vw, 3rem);
+      background:
+        radial-gradient(circle at 50% 24%, rgba(var(--theme-rgb), 0.28), transparent 24rem),
+        linear-gradient(135deg, rgba(2, 6, 23, 0.96), rgba(15, 23, 42, 0.98));
+    }
+
+    body:not(.access-locked) .access-gate {
+      display: none;
+    }
+
+    body.access-locked .scene,
+    body.access-locked .back-button,
+    body.access-locked .cursor-light {
+      pointer-events: none;
+      filter: blur(10px) brightness(0.5);
+    }
+
+    .access-panel {
+      width: min(520px, 100%);
+      border: 1px solid rgba(var(--theme-rgb), 0.46);
+      background: rgba(2, 6, 23, 0.78);
+      box-shadow: 0 0 60px rgba(var(--theme-rgb), 0.28), inset 0 0 34px rgba(255, 255, 255, 0.04);
+      padding: clamp(1.2rem, 4vw, 2rem);
+    }
+
+    .access-panel h2 {
+      margin: 0 0 0.4rem;
+      font-size: clamp(2rem, 7vw, 4rem);
+      line-height: 0.95;
+      text-transform: uppercase;
+    }
+
+    .access-panel p {
+      margin: 0 0 1rem;
+      color: rgba(255, 255, 255, 0.72);
+      line-height: 1.5;
+    }
+
+    .access-device {
+      display: block;
+      margin: 0.75rem 0 1rem;
+      padding: 0.75rem;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      color: var(--theme-text);
+      word-break: break-word;
+      background: rgba(0, 0, 0, 0.28);
+    }
+
+    .access-form {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .access-form input {
+      min-height: 3.2rem;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      background: rgba(0, 0, 0, 0.38);
+      color: white;
+      padding: 0.8rem 1rem;
+      font: inherit;
+    }
+
+    .access-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .access-actions button {
+      min-height: 3.1rem;
+      border: 1px solid rgba(var(--theme-rgb), 0.58);
+      background: rgba(var(--theme-deep-rgb), 0.28);
+      color: white;
+      font: 900 0.9rem/1 Arial, Helvetica, sans-serif;
+      text-transform: uppercase;
+    }
+
+    .access-actions button:hover,
+    .access-actions button:focus-visible {
+      outline: 2px solid rgba(255, 255, 255, 0.86);
+      outline-offset: 2px;
+    }
+
+    .access-status {
+      min-height: 1.4rem;
+      margin: 0.2rem 0 0;
+      color: var(--theme-text);
+      font-weight: 700;
+    }
   </style>
 </head>
-<body>
+<body class="access-locked">
+  <section class="access-gate" aria-label="Access password">
+    <div class="access-panel">
+      <h2>Access</h2>
+      <p>Enter this device's password to unlock the campaign. Owner access can unlock any device.</p>
+      <span class="access-device"></span>
+      <div class="access-form">
+        <input class="access-password-input" type="password" placeholder="Password" autocomplete="current-password" aria-label="Access password">
+        <div class="access-actions">
+          <button class="access-unlock-button" type="button">Unlock</button>
+          <button class="access-request-button" type="button">Request Code</button>
+        </div>
+        <p class="access-status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
   <button class="back-button" type="button">Back</button>
   <main class="scene" aria-label="Fogged screen">
     <div class="valley" aria-hidden="true"></div>
@@ -2049,6 +2160,25 @@
 
   <script>
     const root = document.documentElement;
+    const accessTokenKey = "fogClickAccessToken";
+    const accessDeviceKey = "fogClickDeviceId";
+    const nativeFetch = window.fetch.bind(window);
+    let accessDeviceId = localStorage.getItem(accessDeviceKey);
+    if (!accessDeviceId) {
+      accessDeviceId = `FC-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+      localStorage.setItem(accessDeviceKey, accessDeviceId);
+    }
+
+    window.fetch = (resource, options = {}) => {
+      const url = typeof resource === "string" ? resource : resource?.url || "";
+      const isApiCall = url.startsWith("/api/") && !url.startsWith("/api/access/");
+      if (!isApiCall) return nativeFetch(resource, options);
+      const headers = new Headers(options.headers || {});
+      const token = localStorage.getItem(accessTokenKey);
+      if (token) headers.set("X-Access-Token", token);
+      return nativeFetch(resource, { ...options, headers });
+    };
+
     let introAudioContext = null;
     let introMusicNodes = [];
     let introMusicTimer = null;
@@ -2505,6 +2635,70 @@
         image.setAttribute("src", readySources[index]);
       });
     }
+
+    const accessDeviceLabel = document.querySelector(".access-device");
+    const accessPasswordInput = document.querySelector(".access-password-input");
+    const accessUnlockButton = document.querySelector(".access-unlock-button");
+    const accessRequestButton = document.querySelector(".access-request-button");
+    const accessStatus = document.querySelector(".access-status");
+
+    function setAccessStatus(message) {
+      accessStatus.textContent = message;
+    }
+
+    function unlockAccess(token) {
+      if (token) localStorage.setItem(accessTokenKey, token);
+      document.body.classList.remove("access-locked");
+      setAccessStatus("");
+    }
+
+    async function verifyAccessPassword() {
+      const password = accessPasswordInput.value.trim();
+      if (!password) {
+        setAccessStatus("Enter a password first.");
+        return;
+      }
+      setAccessStatus("Checking password...");
+      try {
+        const response = await nativeFetch("/api/access/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId: accessDeviceId, password }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Access denied.");
+        unlockAccess(data.token);
+      } catch (error) {
+        setAccessStatus(error.message);
+      }
+    }
+
+    async function requestDeviceAccess() {
+      setAccessStatus("Creating device password request...");
+      try {
+        const response = await nativeFetch("/api/access/request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ deviceId: accessDeviceId }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Request failed.");
+        setAccessStatus(`Request created for ${data.ownerEmail}.`);
+        window.location.href = data.mailto;
+      } catch (error) {
+        setAccessStatus(error.message);
+      }
+    }
+
+    accessDeviceLabel.textContent = `Device ID: ${accessDeviceId}`;
+    if (localStorage.getItem(accessTokenKey)) {
+      unlockAccess();
+    }
+    accessUnlockButton.addEventListener("click", verifyAccessPassword);
+    accessRequestButton.addEventListener("click", requestDeviceAccess);
+    accessPasswordInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") verifyAccessPassword();
+    });
 
     function goBackOneScreen() {
       clearTimeout(startTransitionTimer);
