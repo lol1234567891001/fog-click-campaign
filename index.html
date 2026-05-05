@@ -604,6 +604,85 @@
       outline: none;
     }
 
+    .picker-stack {
+      width: min(360px, 58vw);
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .picker-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.45rem;
+    }
+
+    .power-select,
+    .universe-select,
+    .power-custom-input,
+    .universe-custom-input {
+      min-width: 0;
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      background: rgba(0, 0, 0, 0.54);
+      color: #fff;
+      padding: 0.48rem 0.55rem;
+      font: inherit;
+    }
+
+    .power-select option,
+    .universe-select option {
+      background: #130d0a;
+      color: #fff7ed;
+    }
+
+    .power-custom-input,
+    .universe-custom-input {
+      display: none;
+    }
+
+    .power-custom-input.is-visible,
+    .universe-custom-input.is-visible {
+      display: block;
+    }
+
+    .add-power-button {
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      background: rgba(250, 204, 21, 0.12);
+      color: #fff;
+      padding: 0.42rem 0.7rem;
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+      text-transform: uppercase;
+    }
+
+    .selected-powers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .power-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border: 1px solid rgba(254, 215, 170, 0.5);
+      background: rgba(127, 29, 29, 0.28);
+      color: #fff7ed;
+      padding: 0.28rem 0.45rem;
+      font-size: 0.78rem;
+      font-weight: 800;
+    }
+
+    .power-chip button {
+      border: 0;
+      background: transparent;
+      color: #fff;
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+      padding: 0 0.1rem;
+    }
+
     .ai-chat {
       min-height: 0;
       display: grid;
@@ -1150,11 +1229,23 @@
               </div>
               <div class="detail-line">
                 <strong>Power</strong>
-                <input class="class-input" type="text" value="Wanderer" aria-label="Power or class">
+                <input class="class-input" type="hidden" value="Wanderer" aria-label="Power or class">
+                <div class="picker-stack" aria-label="Power picker">
+                  <div class="picker-row">
+                    <select class="power-select" aria-label="Choose a power"></select>
+                    <button class="add-power-button" type="button">Add</button>
+                  </div>
+                  <input class="power-custom-input" type="text" placeholder="Type a custom power, then press Add" aria-label="Custom power">
+                  <div class="selected-powers" aria-live="polite"></div>
+                </div>
               </div>
               <div class="detail-line">
                 <strong>Universe</strong>
-                <input class="universe-input" type="text" value="Original fantasy" aria-label="Universe">
+                <input class="universe-input" type="hidden" value="Original fantasy" aria-label="Universe">
+                <div class="picker-stack" aria-label="Universe picker">
+                  <select class="universe-select" aria-label="Choose a universe"></select>
+                  <input class="universe-custom-input" type="text" placeholder="Type a custom universe" aria-label="Custom universe">
+                </div>
               </div>
               <div class="detail-line">
                 <strong>Fate</strong>
@@ -1416,6 +1507,67 @@
     let introMusicTimer = null;
     let introMusicStarted = false;
     let clickAudioContext = null;
+    const universeOptions = [
+      { value: "Jujutsu Kaisen", label: "JJK" },
+      { value: "Naruto", label: "Naruto" },
+      { value: "Invincible", label: "Invincible" },
+      { value: "Re:Zero", label: "Re:Zero" },
+      { value: "Original fantasy", label: "Original World" },
+      { value: "custom", label: "Custom..." },
+    ];
+    const powerCatalog = [
+      { id: "custom", universe: "Custom", name: "Custom...", abilities: "", senses: "", gear: "", tracks: "" },
+      { id: "jjk-limitless", universe: "JJK", name: "Limitless + Six Eyes", abilities: "Limitless neutral Infinity, Blue attraction, Red repulsion, Hollow Purple erasure line, precise cursed energy control, high-speed spatial defense, domain expansion concept: Unlimited Void style information overload.", senses: "Six Eyes-level cursed energy reading, microscopic technique analysis, near-perfect efficiency awareness, spatial threat detection.", gear: "Blindfold or vision limiter, optional simple cursed tools.", tracks: "Infinity status, cursed energy efficiency, domain cooldown, output strain, spatial control." },
+      { id: "jjk-ten-shadows", universe: "JJK", name: "Ten Shadows Technique", abilities: "Shadow shikigami summoning, Divine Dogs, Nue, Toad, Great Serpent, Max Elephant, Rabbit Escape, Piercing Ox, Round Deer, Tiger Funeral, Mahoraga adaptation, shadow storage and shadow movement.", senses: "Shikigami scouting, shadow awareness, cursed energy tracking through summons.", gear: "Stored weapons inside shadow, shikigami roster.", tracks: "Active shikigami, destroyed/inherited shikigami, Mahoraga adaptation progress, shadow storage, cursed energy drain." },
+      { id: "jjk-shrine", universe: "JJK", name: "Shrine / Slashing Technique", abilities: "Dismantle ranged slash, Cleave adaptive slash, fire-arrow style destructive release, domain-style slashing territory, precise cutting pressure against objects and cursed energy defenses.", senses: "Killing-intent reading, cursed energy durability assessment, range awareness.", gear: "No required gear.", tracks: "Slash output, domain availability, target durability read, collateral risk." },
+      { id: "jjk-copy", universe: "JJK", name: "Copy Technique", abilities: "Copy cursed techniques through conditions, store multiple copied abilities, channel copied powers through a partner spirit, flexible counter-technique fighting.", senses: "Technique recognition, copied ability compatibility sense.", gear: "Binding focus such as ring or partner spirit anchor.", tracks: "Copied techniques, copy conditions met, partner spirit timer, cursed energy reserves." },
+      { id: "jjk-cursed-speech", universe: "JJK", name: "Cursed Speech", abilities: "Command words enforced by cursed energy, stop, move, crush, sleep, blast-away orders, crowd control, verbal binding against weaker targets.", senses: "Target resistance feel, backlash warning, cursed energy pressure in voice.", gear: "Throat medicine, voice limiter, communication notes.", tracks: "Throat damage, command strength, backlash risk, target resistance." },
+      { id: "jjk-boogie", universe: "JJK", name: "Boogie Woogie", abilities: "Clap-triggered position swapping with people or cursed energy objects, feints, team combos, misdirection chains, rhythm-based battlefield control.", senses: "Cursed energy object awareness, timing reads, ally positioning.", gear: "Optional clapping aid or prosthetic trigger.", tracks: "Swap targets, timing advantage, hand condition, enemy adaptation." },
+      { id: "jjk-ratio", universe: "JJK", name: "Ratio Technique", abilities: "Forced 7:3 weak point creation, precision strikes, overtime boost style output spike, structural break attacks.", senses: "Weak point reading, body structure assessment.", gear: "Blunt blade or striking tool.", tracks: "Overtime state, weak point accuracy, weapon condition, fatigue." },
+      { id: "jjk-straw-doll", universe: "JJK", name: "Straw Doll Technique", abilities: "Resonance damage link, Hairpin nail detonation, sympathetic curse attacks through body pieces, ranged cursed nail pressure.", senses: "Link quality sense, curse resonance feedback.", gear: "Hammer, nails, straw doll, target fragments.", tracks: "Available nails, link quality, resonance damage, distance to target." },
+      { id: "jjk-projection", universe: "JJK", name: "Projection Sorcery", abilities: "Twenty-four-frame movement path, speed stacking, frame trapping on rule breaks, high-speed impact chains.", senses: "Motion timing sense, frame route planning.", gear: "No required gear.", tracks: "Frame route, speed stack, freeze window, body strain." },
+      { id: "jjk-blood", universe: "JJK", name: "Blood Manipulation", abilities: "Piercing Blood, Flowing Red Scale, blood hardening, blood edge attacks, convergence, poison blood variants if biologically supported.", senses: "Blood location sense, pulse awareness, injury tracking.", gear: "Blood packs, piercing tools.", tracks: "Blood volume, clotting risk, Flowing Red Scale state, poison potency." },
+      { id: "jjk-cursed-spirit", universe: "JJK", name: "Cursed Spirit Manipulation", abilities: "Absorb and command cursed spirits, deploy spirit abilities, swarm tactics, Uzumaki-style condensed curse release.", senses: "Curse grade detection, spirit obedience feel.", gear: "Captured curse inventory.", tracks: "Stored spirits, strongest spirit grade, loyalty/control risk, Uzumaki charge." },
+      { id: "jjk-idle", universe: "JJK", name: "Idle Transfiguration", abilities: "Soul-shape alteration by touch, body reshaping, transfigured minions, healing through soul form control, domain-style unavoidable touch.", senses: "Soul outline perception, body-soul mismatch reading.", gear: "No required gear.", tracks: "Soul contact, transfiguration stock, domain cooldown, soul damage taken." },
+      { id: "jjk-disaster-flames", universe: "JJK", name: "Disaster Flames", abilities: "Volcanic fire bursts, ember swarms, lava-like eruptions, heat pressure, domain-style volcanic terrain.", senses: "Heat mapping, cursed energy ignition sense.", gear: "No required gear.", tracks: "Heat output, burn spread, terrain ignition, domain readiness." },
+      { id: "jjk-disaster-plants", universe: "JJK", name: "Disaster Plants", abilities: "Cursed plant growth, wooden spears, flower field calm effect, energy-draining buds, terrain control.", senses: "Life-force and cursed energy through roots, terrain vibration.", gear: "No required gear.", tracks: "Root network, drained energy, terrain control, flower field effect." },
+      { id: "jjk-sky", universe: "JJK", name: "Sky Manipulation", abilities: "Treat sky as a surface, bend space around attacks, redirect impact, aerial movement, thin-ice breaker style shattering hit.", senses: "Spatial surface awareness, incoming vector reading.", gear: "No required gear.", tracks: "Sky surface control, redirected attacks, aerial position, output strain." },
+      { id: "naruto-uchiha", universe: "Naruto", name: "Uchiha Clan / Sharingan", abilities: "Sharingan perception, genjutsu, chakra copying, fire style affinity, Mangekyo-style unique ocular arts, Susanoo avatar progression if awakened.", senses: "Chakra flow reading, motion prediction, genjutsu detection.", gear: "Kunai, shuriken, wire, optional fan weapon.", tracks: "Eye strain, tomoe/Mangekyo stage, copied jutsu, Susanoo stability." },
+      { id: "naruto-hyuga", universe: "Naruto", name: "Hyuga Clan / Byakugan", abilities: "Byakugan near-360 vision, Gentle Fist chakra point strikes, Rotation defense, Air Palm, Twin Lion Fists style pressure.", senses: "Long-range vision, chakra network sight, blind-spot awareness.", gear: "No required gear.", tracks: "Byakugan range, chakra point damage, blind spot pressure, stamina." },
+      { id: "naruto-senju", universe: "Naruto", name: "Senju Vitality", abilities: "Huge life force, stamina-heavy ninjutsu, regeneration potential, versatile elemental training, leadership/body endurance focus.", senses: "High chakra stamina awareness, life-force resilience.", gear: "Standard shinobi kit.", tracks: "Chakra reserves, healing rate, stamina, elemental jutsu known." },
+      { id: "naruto-uzumaki", universe: "Naruto", name: "Uzumaki Clan / Sealing", abilities: "Massive chakra reserves, sealing chains, barrier seals, storage seals, suppression seals, endurance and recovery.", senses: "Seal formula reading, chakra chain feedback.", gear: "Seal tags, ink, scrolls.", tracks: "Seal tags, chain strength, chakra reserves, active barriers." },
+      { id: "naruto-nara", universe: "Naruto", name: "Nara Shadow Possession", abilities: "Shadow imitation, shadow strangling, tactical binding, terrain-based trap control, team capture setups.", senses: "Shadow reach awareness, tactical board reading.", gear: "Flash bombs, wire, kunai for shadow angles.", tracks: "Shadow range, sunlight angle, bound targets, chakra drain." },
+      { id: "naruto-akimichi", universe: "Naruto", name: "Akimichi Expansion", abilities: "Multi-size expansion, partial expansion strikes, calorie-to-chakra conversion, butterfly mode-style power release.", senses: "Body mass and calorie reserve awareness.", gear: "Food pills, heavy gloves.", tracks: "Calorie reserves, expansion size, butterfly mode risk, stamina." },
+      { id: "naruto-yamanaka", universe: "Naruto", name: "Yamanaka Mind Techniques", abilities: "Mind transfer, sensory relay, telepathic communication, mind disturbance, interrogation support.", senses: "Mind presence detection, communication network sense.", gear: "Communication gear, restraints.", tracks: "Mind link targets, body vulnerability, range, mental strain." },
+      { id: "naruto-aburame", universe: "Naruto", name: "Aburame Insect Host", abilities: "Chakra-eating kikaichu swarm, tracking insects, clone feints, poison/parasite variants, silent draining attacks.", senses: "Insect scout network, pheromone tracking, chakra feeding feedback.", gear: "Insect colonies, jars or sleeves.", tracks: "Swarm size, chakra drained, scout coverage, colony health." },
+      { id: "naruto-inuzuka", universe: "Naruto", name: "Inuzuka Beast Style", abilities: "Partner-beast coordination, fang over fang, beast mimicry, scent marking, combined transformation.", senses: "Extreme smell tracking, animal partner senses.", gear: "Ninken partner, smoke bombs, soldier pills.", tracks: "Partner condition, scent trail strength, transformation timer, stamina." },
+      { id: "naruto-puppets", universe: "Naruto", name: "Puppet Master", abilities: "Chakra thread control, hidden weapons, poison blades, puppet substitution, multi-puppet tactics.", senses: "Thread feedback, trap mechanism awareness.", gear: "Combat puppets, poison, repair tools.", tracks: "Active puppets, thread control, poison stock, puppet damage." },
+      { id: "naruto-jinchuriki", universe: "Naruto", name: "Jinchuriki Chakra Cloak", abilities: "Tailed-beast chakra cloak, chakra arms, beast bomb progression, accelerated healing, rage-state power spike.", senses: "Negative emotion sensing at higher mastery, beast chakra pressure.", gear: "Seal focus, training restraints.", tracks: "Tail stage, seal stability, beast cooperation, rage risk." },
+      { id: "naruto-wood", universe: "Naruto", name: "Wood Release", abilities: "Wood constructs, binding forests, deep forest emergence, suppression of tailed-beast chakra, durable terrain control.", senses: "Root network feedback, life-force terrain sense.", gear: "No required gear.", tracks: "Forest coverage, binding strength, suppression effect, chakra reserves." },
+      { id: "naruto-rinnegan", universe: "Naruto", name: "Rinnegan Paths", abilities: "Deva gravity push/pull, Asura weapon body, Human soul extraction, Animal summons, Preta absorption, Naraka restoration, Outer Path control.", senses: "Shared vision through summons/bodies, chakra gravity field awareness.", gear: "Black receivers, summon contracts.", tracks: "Path cooldowns, linked bodies, chakra drain, receiver control." },
+      { id: "naruto-sage", universe: "Naruto", name: "Sage Mode", abilities: "Natural energy blending, enhanced strength/speed/durability, frog kata or variant sensory strikes, massive ninjutsu boost.", senses: "Natural energy sensing, threat presence reading.", gear: "Summon contract or meditation support.", tracks: "Senjutsu balance, sage timer, stone risk, natural energy intake." },
+      { id: "invincible-viltrumite", universe: "Invincible", name: "Viltrumite Physiology", abilities: "Flight, extreme strength, extreme durability, accelerated healing, long lifespan, high-speed collisions, space survival for limited periods.", senses: "Enhanced hearing, battle instinct, pressure changes at flight speed.", gear: "Reinforced suit, comms.", tracks: "Damage taken, oxygen window, flight speed, recovery state, moral restraint." },
+      { id: "invincible-tech-jacket", universe: "Invincible", name: "Tech Jacket", abilities: "Adaptive alien armor, flight, strength amplification, energy weapons, shields, life support, hacking/analysis, battlefield scans, weapon morphing.", senses: "Suit AI scans, radar, biometrics, energy signatures, tactical threat assessment.", gear: "Sentient tech jacket armor, onboard AI, repair systems.", tracks: "Suit charge, armor integrity, weapons online, AI scan results, life support, adaptation progress." },
+      { id: "invincible-atom-eve", universe: "Invincible", name: "Matter Manipulation", abilities: "Atomic restructuring, constructs, barriers, healing, flight platforms, matter conversion with mental blocks around living tissue unless unlocked.", senses: "Molecular structure perception, energy pattern awareness.", gear: "No required gear.", tracks: "Mental block status, construct stability, energy fatigue, matter converted." },
+      { id: "invincible-robot", universe: "Invincible", name: "Drone Genius / Robot Arsenal", abilities: "Remote drone bodies, tactical computing, energy weapons, armor suits, engineering, battlefield coordination.", senses: "Drone sensor network, thermal/sonar/radar feeds.", gear: "Drone bodies, lab resources, weapon platforms.", tracks: "Active drones, damaged frames, ammo/charge, network signal, build resources." },
+      { id: "invincible-monster-girl", universe: "Invincible", name: "Monster Transformation", abilities: "Transform into a giant monster form with major strength and durability, brutal melee, size-based intimidation, regeneration depending on form.", senses: "Enhanced smell/hearing in monster form, threat instinct.", gear: "Stretchable clothing or containment gear.", tracks: "Transformation state, age/side-effect cost, rage control, injuries." },
+      { id: "invincible-dupli-kate", universe: "Invincible", name: "Self Duplication", abilities: "Create multiple independent duplicates, surround targets, scout safely, sacrifice duplicates tactically, overwhelm with numbers.", senses: "Shared tactical awareness between duplicates.", gear: "Comms, light weapons.", tracks: "Active duplicates, original body safety, duplicate losses, coordination strain." },
+      { id: "invincible-shrinking", universe: "Invincible", name: "Shrinking / Size Change", abilities: "Shrink for infiltration, precision attacks, evasive movement, internal sabotage risks, stealth movement.", senses: "Small-scale spatial awareness, vibration sensitivity.", gear: "Size-adaptive suit, micro comms.", tracks: "Current size, oxygen/position risk, stealth status, target interior danger." },
+      { id: "invincible-speed", universe: "Invincible", name: "Super Speed", abilities: "Extreme sprinting, rapid strikes, rescue movement, vortex-like motion, speed blitz attempts.", senses: "Fast reaction perception, wind/impact awareness.", gear: "Friction-resistant suit.", tracks: "Speed level, friction heat, reaction window, stamina." },
+      { id: "invincible-immortal", universe: "Invincible", name: "Immortal Physiology", abilities: "Flight, super strength, high durability, resurrection from severe damage if restored, centuries of combat experience.", senses: "Veteran combat reads, enhanced perception.", gear: "Battle suit.", tracks: "Body integrity, recovery need, flight speed, combat injuries." },
+      { id: "rezero-authority-sloth", universe: "Re:Zero", name: "Authority of Sloth", abilities: "Invisible hand-like force limbs, unseen grapples, crushing strikes, remote interference, madness-pressure theme if unstable.", senses: "Witch factor pressure, unseen limb position sense.", gear: "No required gear.", tracks: "Unseen hands active, sanity strain, witch factor backlash, range." },
+      { id: "rezero-authority-greed", universe: "Re:Zero", name: "Authority of Greed", abilities: "Stillness/heart-based invulnerability concept, damage denial under strict conditions, bond-based defensive sharing depending on version.", senses: "Contract/bond awareness, threat to protected state.", gear: "No required gear.", tracks: "Condition active, protected bonds, backlash risk, vulnerability windows." },
+      { id: "rezero-authority-gluttony", universe: "Re:Zero", name: "Authority of Gluttony", abilities: "Name/memory consumption concept, identity erasure effects, copied skills through eaten identity, predatory knowledge theft.", senses: "Name and memory presence feel, identity residue.", gear: "No required gear.", tracks: "Consumed names, copied skills, memory fragments, identity backlash." },
+      { id: "rezero-divine-protection", universe: "Re:Zero", name: "Divine Protection", abilities: "Blessing-based talent such as sword mastery, wind reading, first strike, tracking, protection from specific hazards, or custom blessing.", senses: "Blessing-specific instinct, omen reading.", gear: "Usually a favored weapon or charm.", tracks: "Blessing condition, activation limits, favor state, countered hazards." },
+      { id: "rezero-spirit-arts", universe: "Re:Zero", name: "Spirit Arts", abilities: "Contracted spirit magic, elemental casting, healing support, barriers, mana sharing, spirit coordination.", senses: "Mana flow perception, spirit presence, contract feedback.", gear: "Spirit contract, focus crystal or charm.", tracks: "Mana reserves, spirit mood, contract distance, spell strain." },
+      { id: "rezero-yin-magic", universe: "Re:Zero", name: "Yin Magic", abilities: "Shadow magic, gravity-like pressure, sensory interference, spatial tricks, debuffs, binding darkness.", senses: "Mana shadow reading, distortion awareness.", gear: "Magic focus optional.", tracks: "Mana reserves, debuff duration, shadow field, casting strain." },
+      { id: "rezero-sword-saint", universe: "Re:Zero", name: "Sword Saint Talent", abilities: "Overwhelming sword skill, battle intuition, perfect cutting lines, speed and precision at elite knight level or higher.", senses: "Killing intent reading, attack line prediction.", gear: "High-quality sword.", tracks: "Sword condition, battle focus, injury burden, opponent read." },
+      { id: "original-sun", universe: "Original", name: "Cursed Sun", abilities: "Solar cursed energy, heat pressure, golden flame bursts, pride-fueled output, sun-cycle boost, presence reinforcement.", senses: "Heat signatures, cursed energy warmth, solar position instinct.", gear: "Sun-mark focus or charm.", tracks: "Time of day, sun-cycle stage, heat output, pride/focus, cursed energy reserves." },
+      { id: "original-shadow", universe: "Original", name: "Shadow Monarch", abilities: "Shadow soldiers, shadow storage, teleport between marked shadows, fear aura, command pressure.", senses: "Shadow network awareness, death energy detection.", gear: "Marked shadow anchors.", tracks: "Shadow army count, strongest soldier, mana reserves, shadow marks." },
+      { id: "original-dragon", universe: "Original", name: "Dragon Vessel", abilities: "Scaled durability, breath attack, draconic aura, winged movement, elemental resistance, treasure/territory instinct.", senses: "Heat/treasure/life-force instinct, aerial awareness.", gear: "Draconic focus, scale armor optional.", tracks: "Dragon form stage, breath charge, aura pressure, hoard/territory bond." },
+    ];
+    let selectedPowerIds = [];
+    const customPowers = new Map();
 
     function setCursorPosition(x, y) {
       root.style.setProperty("--cursor-x", `${x}px`);
@@ -1635,6 +1787,123 @@
     let currentRoom = "";
     let currentPlayer = "";
     let lastRoomMessageCount = 0;
+    const powerSelect = document.querySelector(".power-select");
+    const powerCustomInput = document.querySelector(".power-custom-input");
+    const selectedPowersBox = document.querySelector(".selected-powers");
+    const universeSelect = document.querySelector(".universe-select");
+    const universeCustomInput = document.querySelector(".universe-custom-input");
+
+    function optionLabel(power) {
+      return power.id === "custom" ? power.name : `${power.universe} - ${power.name}`;
+    }
+
+    function getPowerById(id) {
+      return powerCatalog.find((power) => power.id === id) || customPowers.get(id);
+    }
+
+    function appendSectionText(current, heading, text) {
+      const cleanText = String(text || "").trim();
+      if (!cleanText) return current;
+      const block = `${heading}:\n${cleanText}`;
+      if (String(current || "").includes(block)) return current;
+      return [current, block].filter(Boolean).join("\n\n");
+    }
+
+    function mergeSelectedPowerDetails() {
+      const selected = selectedPowerIds.map(getPowerById).filter(Boolean);
+      const abilitiesInput = document.querySelector(".abilities-input");
+      const sensesInput = document.querySelector(".senses-input");
+      const gearInput = document.querySelector(".gear-input");
+      const breakdownInput = document.querySelector(".breakdown-input");
+
+      selected.forEach((power) => {
+        abilitiesInput.value = appendSectionText(abilitiesInput.value, power.name, power.abilities);
+        sensesInput.value = appendSectionText(sensesInput.value, power.name, power.senses);
+        gearInput.value = appendSectionText(gearInput.value, power.name, power.gear);
+        breakdownInput.value = appendSectionText(breakdownInput.value, power.name, power.tracks);
+      });
+    }
+
+    function renderSelectedPowers() {
+      selectedPowersBox.innerHTML = "";
+      const selected = selectedPowerIds.map(getPowerById).filter(Boolean);
+      document.querySelector(".class-input").value = selected.length ? selected.map((power) => power.name).join(" + ") : "Wanderer";
+
+      selected.forEach((power) => {
+        const chip = document.createElement("span");
+        chip.className = "power-chip";
+        chip.textContent = power.name;
+        const removeButton = document.createElement("button");
+        removeButton.type = "button";
+        removeButton.textContent = "X";
+        removeButton.setAttribute("aria-label", `Remove ${power.name}`);
+        removeButton.addEventListener("click", () => {
+          selectedPowerIds = selectedPowerIds.filter((id) => id !== power.id);
+          renderSelectedPowers();
+          saveState();
+        });
+        chip.append(removeButton);
+        selectedPowersBox.append(chip);
+      });
+    }
+
+    function addSelectedPower() {
+      const selectedId = powerSelect.value;
+      if (selectedId === "custom") {
+        const customName = powerCustomInput.value.trim();
+        if (!customName) return;
+        const id = `custom-${customName.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}`;
+        customPowers.set(id, {
+          id,
+          universe: "Custom",
+          name: customName,
+          abilities: `Custom power concept: ${customName}. Describe its attacks, limits, transformations, and special moves here.`,
+          senses: `Custom senses for ${customName}. Add detection, instincts, scans, or awareness here.`,
+          gear: "",
+          tracks: `Track ${customName} output, growth, limits, cooldowns, and special states.`,
+        });
+        selectedPowerIds.push(id);
+        powerCustomInput.value = "";
+      } else if (selectedId && !selectedPowerIds.includes(selectedId)) {
+        selectedPowerIds.push(selectedId);
+      }
+
+      renderSelectedPowers();
+      mergeSelectedPowerDetails();
+      saveState();
+    }
+
+    function updateUniverseValue(shouldSave = true) {
+      const selected = universeSelect.value;
+      const custom = universeCustomInput.value.trim();
+      universeCustomInput.classList.toggle("is-visible", selected === "custom");
+      document.querySelector(".universe-input").value = selected === "custom" ? (custom || "Custom world") : selected;
+      if (shouldSave) saveState();
+    }
+
+    function populatePickers() {
+      powerSelect.innerHTML = "";
+      powerCatalog.forEach((power) => {
+        const option = document.createElement("option");
+        option.value = power.id;
+        option.textContent = optionLabel(power);
+        powerSelect.append(option);
+      });
+      powerSelect.value = "jjk-limitless";
+      powerCustomInput.classList.remove("is-visible");
+
+      universeSelect.innerHTML = "";
+      universeOptions.forEach((universe) => {
+        const option = document.createElement("option");
+        option.value = universe.value;
+        option.textContent = universe.label;
+        universeSelect.append(option);
+      });
+
+      universeSelect.value = "Original fantasy";
+      updateUniverseValue(false);
+      renderSelectedPowers();
+    }
 
     function getStatScaling() {
       const stats = {};
@@ -1788,6 +2057,11 @@
         gearOutput: document.querySelector(".gear-output")?.textContent || "",
         room: currentRoom,
         player: currentPlayer,
+        selectedPowerIds,
+        customPowers: [...customPowers.entries()],
+        powerPicker: powerSelect.value,
+        universePicker: universeSelect.value,
+        customUniverse: universeCustomInput.value,
       };
       localStorage.setItem(saveKey, JSON.stringify(state));
     }
@@ -2384,6 +2658,20 @@
     document.querySelector(".leave-room").addEventListener("click", leaveRoom);
     setInterval(syncRoom, 2500);
 
+    powerSelect.addEventListener("change", () => {
+      powerCustomInput.classList.toggle("is-visible", powerSelect.value === "custom");
+      saveState();
+    });
+    document.querySelector(".add-power-button").addEventListener("click", addSelectedPower);
+    powerCustomInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        addSelectedPower();
+      }
+    });
+    universeSelect.addEventListener("change", updateUniverseValue);
+    universeCustomInput.addEventListener("input", updateUniverseValue);
+
     document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .breakdown-input, .breakdown-live-input, .tone-input, .difficulty-input, .canon-input, #characterIdea, .recap-input").forEach((input) => {
       input.addEventListener("input", saveState);
     });
@@ -2398,9 +2686,36 @@
 
       try {
         const state = JSON.parse(raw);
+        (state.customPowers || []).forEach(([id, power]) => customPowers.set(id, power));
+        selectedPowerIds = Array.isArray(state.selectedPowerIds) ? state.selectedPowerIds.filter((id) => getPowerById(id)) : [];
+        if (!selectedPowerIds.length && state.power && state.power !== "Wanderer") {
+          const id = `restored-${Date.now()}`;
+          customPowers.set(id, {
+            id,
+            universe: "Custom",
+            name: state.power,
+            abilities: "",
+            senses: "",
+            gear: "",
+            tracks: "",
+          });
+          selectedPowerIds = [id];
+        }
+        renderSelectedPowers();
+        if (state.powerPicker && [...powerSelect.options].some((option) => option.value === state.powerPicker)) {
+          powerSelect.value = state.powerPicker;
+          powerCustomInput.classList.toggle("is-visible", powerSelect.value === "custom");
+        }
+        if (state.universePicker && [...universeSelect.options].some((option) => option.value === state.universePicker)) {
+          universeSelect.value = state.universePicker;
+        } else if (state.universe && universeOptions.some((option) => option.value === state.universe)) {
+          universeSelect.value = state.universe;
+        } else if (state.universe && state.universe !== "Original fantasy") {
+          universeSelect.value = "custom";
+        }
+        universeCustomInput.value = state.customUniverse || (universeSelect.value === "custom" ? state.universe || "" : "");
+        updateUniverseValue(false);
         document.querySelector(".setup-player-name-input").value = state.playerName || "Player";
-        document.querySelector(".class-input").value = state.power || "Wanderer";
-        document.querySelector(".universe-input").value = state.universe || "Original fantasy";
         document.querySelector(".fate-input").value = state.fate || "Unwritten";
         document.querySelector(".appearance-input").value = state.appearance || "";
         document.querySelector(".abilities-input").value = state.abilities || "";
@@ -2468,6 +2783,7 @@
       }
     }
 
+    populatePickers();
     restoreState();
 
     setCursorPosition(window.innerWidth / 2, window.innerHeight / 2);
