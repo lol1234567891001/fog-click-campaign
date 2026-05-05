@@ -1167,6 +1167,8 @@
               <textarea class="sheet-textarea senses-input" id="sensesInput" placeholder="Energy sensing, suit scans, danger sense, smell, hearing, radar..."></textarea>
               <label for="gearInput" class="stat-name">Gear</label>
               <textarea class="sheet-textarea gear-input" id="gearInput" placeholder="Weapons, armor, suit AI, cursed tools, inventory..."></textarea>
+              <label for="breakdownInput" class="stat-name">Power Breakdown Tracks</label>
+              <textarea class="sheet-textarea breakdown-input" id="breakdownInput" placeholder="Example: time of day, suit charge, cursed energy grade, power growth, JJK grade comparison..."></textarea>
               <h3>Campaign Settings</h3>
               <div class="detail-line">
                 <strong>Tone</strong>
@@ -1650,6 +1652,7 @@
         abilities: document.querySelector(".abilities-input").value,
         senses: document.querySelector(".senses-input").value,
         gear: document.querySelector(".gear-input").value,
+        breakdownTracks: document.querySelector(".breakdown-input").value,
         tone: document.querySelector(".tone-input").value,
         difficulty: document.querySelector(".difficulty-input").value,
         canon: document.querySelector(".canon-input").value,
@@ -1724,6 +1727,7 @@
         abilities: document.querySelector(".abilities-input").value || "Unwritten",
         senses: document.querySelector(".senses-input").value || "Unwritten",
         gear: document.querySelector(".gear-input").value || "Unwritten",
+        breakdownTracks: document.querySelector(".breakdown-input").value || "Track power growth, current state, and story-relevant power metrics.",
         campaign: {
           tone: document.querySelector(".tone-input").value || "Gritty cinematic",
           difficulty: document.querySelector(".difficulty-input").value || "Dangerous",
@@ -1746,6 +1750,7 @@
         `Tone: ${sheet.campaign.tone}\n` +
         `Difficulty: ${sheet.campaign.difficulty}\n` +
         `Canon: ${sheet.campaign.canon}\n\n` +
+        `Track: ${sheet.breakdownTracks}\n\n` +
         `Notes: ${sheet.idea || "No extra character notes yet."}`;
       document.querySelector(".abilities-output").textContent = sheet.abilities;
       document.querySelector(".senses-output").textContent = sheet.senses;
@@ -1776,6 +1781,7 @@
         `Abilities: ${sheet.abilities}\n\n` +
         `Passive Senses: ${sheet.senses}\n\n` +
         `Gear: ${sheet.gear}\n\n` +
+        `Power Breakdown Tracks: ${sheet.breakdownTracks}\n\n` +
         `Story Recap: ${sheet.recap}\n\n` +
         `Campaign: ${sheet.campaign.tone}, ${sheet.campaign.difficulty}, ${sheet.campaign.canon}`;
     }
@@ -2220,7 +2226,7 @@
     document.querySelector(".leave-room").addEventListener("click", leaveRoom);
     setInterval(syncRoom, 2500);
 
-    document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .tone-input, .difficulty-input, .canon-input, #characterIdea, .recap-input").forEach((input) => {
+    document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .breakdown-input, .tone-input, .difficulty-input, .canon-input, #characterIdea, .recap-input").forEach((input) => {
       input.addEventListener("input", saveState);
     });
 
@@ -2238,6 +2244,7 @@
         document.querySelector(".abilities-input").value = state.abilities || "";
         document.querySelector(".senses-input").value = state.senses || "";
         document.querySelector(".gear-input").value = state.gear || "";
+        document.querySelector(".breakdown-input").value = state.breakdownTracks || "";
         document.querySelector(".tone-input").value = state.tone || "Gritty cinematic";
         document.querySelector(".difficulty-input").value = state.difficulty || "Dangerous";
         document.querySelector(".canon-input").value = state.canon || "Canon characters allowed";
