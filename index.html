@@ -1644,6 +1644,65 @@
       return stats;
     }
 
+    function parseMaybeJson(value) {
+      let parsed = value;
+      for (let index = 0; index < 4; index += 1) {
+        if (typeof parsed !== "string") break;
+        const trimmed = parsed.trim();
+        if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("[") && !trimmed.startsWith("\""))) break;
+        try {
+          parsed = JSON.parse(trimmed);
+        } catch (error) {
+          break;
+        }
+      }
+      return parsed;
+    }
+
+    function humanizeKey(key) {
+      return String(key)
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/[_-]+/g, " ")
+        .replace(/\b\w/g, (letter) => letter.toUpperCase());
+    }
+
+    function formatTrackerValue(value, indent = 0) {
+      const parsed = parseMaybeJson(value);
+      const pad = "  ".repeat(indent);
+
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, "powerBreakdown")) {
+        return formatTrackerValue(parsed.powerBreakdown, indent);
+      }
+
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => {
+          const cleaned = parseMaybeJson(item);
+          if (cleaned && typeof cleaned === "object") {
+            return `${pad}-\n${formatTrackerValue(cleaned, indent + 1)}`;
+          }
+          return `${pad}- ${cleaned ?? "Unknown"}`;
+        }).join("\n");
+      }
+
+      if (parsed && typeof parsed === "object") {
+        return Object.entries(parsed).map(([key, item]) => {
+          const cleaned = parseMaybeJson(item);
+          if (cleaned && typeof cleaned === "object") {
+            return `${pad}${humanizeKey(key)}:\n${formatTrackerValue(cleaned, indent + 1)}`;
+          }
+          return `${pad}${humanizeKey(key)}: ${cleaned === "" || cleaned == null ? "Unknown" : cleaned}`;
+        }).join("\n");
+      }
+
+      return String(parsed === "" || parsed == null ? "" : parsed);
+    }
+
+    function setPowerBreakdown(value) {
+      const box = document.querySelector(".game-power-breakdown");
+      if (!box) return;
+      box.textContent = formatTrackerValue(value);
+    }
+
     function saveState() {
       const state = {
         stage: document.body.classList.contains("is-playing") ? "playing" : document.body.classList.contains("is-configuring") ? "settings" : document.body.classList.contains("has-started") ? "setup" : document.body.classList.contains("has-continued") ? "journey" : "fog",
@@ -1748,7 +1807,7 @@
       const sheet = getCharacterSheet();
       document.querySelector(".play-power").textContent = sheet.power;
       document.querySelector(".play-fate").textContent = sheet.fate;
-      document.querySelector(".game-power-breakdown").textContent =
+      setPowerBreakdown(
         `Power: ${sheet.power}\n` +
         `Universe: ${sheet.universe}\n` +
         `Appearance: ${sheet.appearance}\n\n` +
@@ -1756,7 +1815,8 @@
         `Difficulty: ${sheet.campaign.difficulty}\n` +
         `Canon: ${sheet.campaign.canon}\n\n` +
         `Track: ${sheet.breakdownTracks}\n\n` +
-        `Notes: ${sheet.idea || "No extra character notes yet."}`;
+        `Notes: ${sheet.idea || "No extra character notes yet."}`
+      );
       document.querySelector(".abilities-output").textContent = sheet.abilities;
       document.querySelector(".senses-output").textContent = sheet.senses;
       document.querySelector(".gear-output").textContent = sheet.gear;
@@ -1802,7 +1862,7 @@
           box.textContent = `Power Breakdown AI error:\n${data.message || data.error || "Request failed."}`;
           return;
         }
-        box.textContent = data.powerBreakdown || data.message || previous;
+        setPowerBreakdown(data.powerBreakdown || data.message || previous);
       } catch (error) {
         box.textContent = `Power Breakdown AI could not update:\n${error.message || error}`;
       }
@@ -2046,7 +2106,7 @@
           pulseThreat();
         }
         if (data.powerBreakdown) {
-          document.querySelector(".game-power-breakdown").textContent = data.powerBreakdown;
+          setPowerBreakdown(data.powerBreakdown);
         }
         refreshPowerBreakdown(result);
         if (data.memory) {
@@ -2253,7 +2313,7 @@
             playAlertSound(message.threat ? "danger" : "scan");
           }
           if (message.threat) pulseThreat();
-          if (message.powerBreakdown) document.querySelector(".game-power-breakdown").textContent = message.powerBreakdown;
+          if (message.powerBreakdown) setPowerBreakdown(message.powerBreakdown);
           if (message.speaker === "Narrator") refreshPowerBreakdown(message.text);
           if (message.memory) document.querySelector(".memory-output").textContent = message.memory;
           if (Array.isArray(message.choices) && message.choices.length) renderActionChoices(message.choices);
@@ -2326,7 +2386,7 @@
         if (state.stage === "playing") {
           renderPlaySheet();
           document.body.classList.add("is-playing");
-          if (state.powerBreakdown) document.querySelector(".game-power-breakdown").textContent = state.powerBreakdown;
+          if (state.powerBreakdown) setPowerBreakdown(state.powerBreakdown);
           if (state.breakdownLiveInstructions) document.querySelector(".breakdown-live-input").value = state.breakdownLiveInstructions;
           if (state.scan) document.querySelector(".scan-output").textContent = state.scan;
           if (state.memory) document.querySelector(".memory-output").textContent = state.memory;

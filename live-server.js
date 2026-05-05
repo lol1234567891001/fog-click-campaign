@@ -128,6 +128,59 @@ function sendJson(response, statusCode, data) {
   response.end(JSON.stringify(data));
 }
 
+function parseMaybeJson(value) {
+  let parsed = value;
+  for (let index = 0; index < 4; index += 1) {
+    if (typeof parsed !== "string") break;
+    const trimmed = parsed.trim();
+    if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("[") && !trimmed.startsWith("\""))) break;
+    try {
+      parsed = JSON.parse(trimmed);
+    } catch (error) {
+      break;
+    }
+  }
+  return parsed;
+}
+
+function humanizeKey(key) {
+  return String(key)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+function formatPowerBreakdown(value, indent = 0) {
+  const parsed = parseMaybeJson(value);
+  const pad = "  ".repeat(indent);
+
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed) && Object.prototype.hasOwnProperty.call(parsed, "powerBreakdown")) {
+    return formatPowerBreakdown(parsed.powerBreakdown, indent);
+  }
+
+  if (Array.isArray(parsed)) {
+    return parsed.map((item) => {
+      const cleaned = parseMaybeJson(item);
+      if (cleaned && typeof cleaned === "object") {
+        return `${pad}-\n${formatPowerBreakdown(cleaned, indent + 1)}`;
+      }
+      return `${pad}- ${cleaned ?? "Unknown"}`;
+    }).join("\n");
+  }
+
+  if (parsed && typeof parsed === "object") {
+    return Object.entries(parsed).map(([key, item]) => {
+      const cleaned = parseMaybeJson(item);
+      if (cleaned && typeof cleaned === "object") {
+        return `${pad}${humanizeKey(key)}:\n${formatPowerBreakdown(cleaned, indent + 1)}`;
+      }
+      return `${pad}${humanizeKey(key)}: ${cleaned === "" || cleaned == null ? "Unknown" : cleaned}`;
+    }).join("\n");
+  }
+
+  return String(parsed === "" || parsed == null ? "" : parsed);
+}
+
 async function resolveElevenLabsVoiceId(apiKey) {
   if (cachedElevenLabsVoiceId) return cachedElevenLabsVoiceId;
 
@@ -307,7 +360,7 @@ async function gameMaster(request, response) {
         {
           role: "system",
           content:
-            "You are a gritty solo campaign game master. Use the character sheet, story recap, campaign settings, abilities, passive senses, gear, requested power-breakdown tracking fields, and stat scaling as hard context for what the player can do. Treat any recap field as prior canon and continue from it instead of restarting the story. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling, abilities, passive senses, or gear, narrate an attempted failure clearly. Do not grant new powers or rewrite the sheet unless earned. Follow the selected tone, difficulty, and canon rules. Keep continuity from history. Style: tense, cinematic, sensory, direct, dangerous; avoid cheerful tutorial phrasing. Return only valid JSON with this shape: {\"message\":\"1-2 gritty paragraphs plus a short 'What do you do?' line\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"updated AI-maintained tracker lines\",\"memory\":\"updated canon/memory notes or empty string\",\"choices\":[\"2-4 short action choices\"],\"threat\":true_or_false}. Always return powerBreakdown. The powerBreakdown field is a separate tracker box, not narration. It must list the exact things the player asked to track as compact lines, such as 'Time of Day: ...', 'JJK Grade Comparison: ...', 'Power Growth: ...', 'Suit Charge: ...', 'Cursed Energy Output: ...'. If a tracked value is unknown, write 'Unknown' instead of ignoring it. Update those lines based on the current scene/action and previous breakdown. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's passive senses, gear, power, and scaling. Set threat true when danger, hostile energy, pursuit, injury, or alarm is present. Keep memory as concise canon: current objective, injuries, allies, enemies, learned facts, and power limits.",
+            "You are a gritty solo campaign game master. Use the character sheet, story recap, campaign settings, abilities, passive senses, gear, requested power-breakdown tracking fields, and stat scaling as hard context for what the player can do. Treat any recap field as prior canon and continue from it instead of restarting the story. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling, abilities, passive senses, or gear, narrate an attempted failure clearly. Do not grant new powers or rewrite the sheet unless earned. Follow the selected tone, difficulty, and canon rules. Keep continuity from history. Style: tense, cinematic, sensory, direct, dangerous; avoid cheerful tutorial phrasing. Return only valid JSON with this shape: {\"message\":\"1-2 gritty paragraphs plus a short 'What do you do?' line\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"plain tracker lines only\",\"memory\":\"updated canon/memory notes or empty string\",\"choices\":[\"2-4 short action choices\"],\"threat\":true_or_false}. Always return powerBreakdown. The powerBreakdown value must be plain readable lines only, never nested JSON, never braces, never escaped quotes, and never markdown. It must list the exact things the player asked to track as compact lines, such as 'Time of Day: ...', 'JJK Grade Comparison: ...', 'Power Growth: ...', 'Suit Charge: ...', 'Cursed Energy Output: ...'. If a tracked value is unknown, write 'Unknown' instead of ignoring it. Update those lines based on the current scene/action and previous breakdown. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's passive senses, gear, power, and scaling. Set threat true when danger, hostile energy, pursuit, injury, or alarm is present. Keep memory as concise canon: current objective, injuries, allies, enemies, learned facts, and power limits.",
         },
         {
           role: "user",
@@ -344,7 +397,7 @@ async function gameMaster(request, response) {
     sendJson(response, 200, {
       message: parsed.message || "The world waits in silence.",
       scan: parsed.scan || "",
-      powerBreakdown: parsed.powerBreakdown || "",
+      powerBreakdown: formatPowerBreakdown(parsed.powerBreakdown || ""),
       memory: parsed.memory || "",
       choices: Array.isArray(parsed.choices) ? parsed.choices : [],
       threat: Boolean(parsed.threat),
@@ -512,14 +565,14 @@ async function powerBreakdown(request, response) {
     },
     body: JSON.stringify({
       model: openRouterModel,
-      max_tokens: 300,
+      max_tokens: 600,
       temperature: 0.2,
       response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
           content:
-            "You maintain the Power Breakdown console for a solo campaign. Return only valid JSON: {\"powerBreakdown\":\"...\"}. This is a tracker box, not narration. Use the player's requested tracking fields as explicit compact lines, for example 'Time of Day: ...', 'JJK Grade Comparison: ...', 'Power Growth: ...'. Update it from the sheet, recap, current scene, prior breakdown, and live tracker instructions. Track concrete state, not story prose: time of day, power growth, verse grade/tier comparison, suit charge, energy level, current form, injuries, cooldowns, unlocked abilities, gear state, or whatever the player requested. If information is unknown, write Unknown instead of ignoring or inventing it.",
+            "You maintain the Power Breakdown console for a solo campaign. Return only valid JSON: {\"powerBreakdown\":\"...\"}. The powerBreakdown value must be plain readable tracker lines only, never nested JSON, never braces, never escaped quotes, and never markdown. This is a tracker box, not narration. Use the player's requested tracking fields as explicit compact lines, for example 'Time of Day: ...', 'JJK Grade Comparison: ...', 'Power Growth: ...'. Update it from the sheet, recap, current scene, prior breakdown, and live tracker instructions. Track concrete state, not story prose: time of day, power growth, verse grade/tier comparison, suit charge, energy level, current form, injuries, cooldowns, unlocked abilities, gear state, or whatever the player requested. If information is unknown, write Unknown instead of ignoring or inventing it.",
         },
         {
           role: "user",
@@ -544,9 +597,9 @@ async function powerBreakdown(request, response) {
 
   try {
     const parsed = JSON.parse(content);
-    sendJson(response, 200, { powerBreakdown: parsed.powerBreakdown || content });
+    sendJson(response, 200, { powerBreakdown: formatPowerBreakdown(parsed.powerBreakdown || content) });
   } catch (error) {
-    sendJson(response, 200, { powerBreakdown: content });
+    sendJson(response, 200, { powerBreakdown: formatPowerBreakdown(content) });
   }
 }
 
