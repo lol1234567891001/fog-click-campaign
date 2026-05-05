@@ -1271,6 +1271,7 @@
               <input class="room-input room-code-input" type="text" placeholder="Room code" aria-label="Room code">
               <button class="audio-button create-room" type="button">Create Room</button>
               <button class="audio-button join-room" type="button">Join Room</button>
+              <button class="audio-button leave-room" type="button">Solo Mode</button>
               <div class="room-status">Solo mode. Create or join a room to wait for both players.</div>
             </div>
           </section>
@@ -1369,6 +1370,10 @@
           </aside>
           <section class="hud-panel game-master">
             <h3>Adventure</h3>
+            <div class="audio-controls game-audio-controls" aria-label="Adventure audio controls">
+              <button class="audio-button game-read-latest" type="button">Read Adventure</button>
+              <button class="audio-button game-stop-reading" type="button">Stop Audio</button>
+            </div>
             <div class="chat-log game-log" aria-live="polite">
               <p class="chat-message"><strong>Narrator:</strong> Your journey begins. Type what you try to do, and the world will judge it against your sheet.</p>
             </div>
@@ -1949,6 +1954,9 @@
           }),
         });
         const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.message || data.error || "Game master request failed.");
+        }
         const result = data.message || "Nothing happens.";
         thinking.remove();
         appendMessage(gameLog, "Narrator", result);
@@ -1976,7 +1984,7 @@
         saveState();
       } catch (error) {
         thinking.remove();
-        appendMessage(gameLog, "Narrator", "The world could not answer. Check the local server.");
+        appendMessage(gameLog, "Narrator", `The world could not answer. ${error.message || "Check the local server."}`);
       }
     }
 
@@ -1988,7 +1996,11 @@
       speakText(latestNarration);
     });
 
-    document.querySelector(".stop-reading").addEventListener("click", () => {
+    document.querySelector(".game-read-latest").addEventListener("click", () => {
+      speakText(latestNarration);
+    });
+
+    function stopNarrationAudio() {
       if (narratorAudio) {
         narratorAudio.pause();
         URL.revokeObjectURL(narratorAudio.src);
@@ -1997,7 +2009,10 @@
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
-    });
+    }
+
+    document.querySelector(".stop-reading").addEventListener("click", stopNarrationAudio);
+    document.querySelector(".game-stop-reading").addEventListener("click", stopNarrationAudio);
 
     function applyAccessibilitySettings() {
       document.body.classList.toggle("high-contrast", document.querySelector(".high-contrast-toggle").checked);
@@ -2107,9 +2122,21 @@
       syncRoom();
     }
 
+    function leaveRoom() {
+      currentRoom = "";
+      lastRoomMessageCount = 0;
+      roomCodeInput.value = "";
+      document.body.classList.remove("has-room");
+      document.querySelector(".room-badge-code").textContent = "-----";
+      roomStatus.textContent = "Solo mode. Create or join a room to wait for both players.";
+      appendMessage(gameLog, "System", "Solo mode enabled. Your prompts will answer immediately.");
+      saveState();
+    }
+
     async function submitRoomAction(action) {
       if (!currentRoom) return;
       gameInput.value = "";
+      appendMessage(gameLog, "System", "Action submitted. Waiting for the other player or narrator...");
       setRoomStatus("Action submitted. Waiting for the other player...");
 
       const response = await fetch(`/api/rooms/${currentRoom}/action`, {
@@ -2118,6 +2145,10 @@
         body: JSON.stringify({ playerName: currentPlayer || "Player", action, sheet: getCharacterSheet() }),
       });
       const data = await response.json();
+      if (!response.ok || data.error) {
+        appendMessage(gameLog, "System", data.error || "Room action failed.");
+        return;
+      }
       if (data.message) setRoomStatus(data.message);
       await syncRoom();
     }
@@ -2160,6 +2191,7 @@
 
     document.querySelector(".create-room").addEventListener("click", createRoom);
     document.querySelector(".join-room").addEventListener("click", joinRoom);
+    document.querySelector(".leave-room").addEventListener("click", leaveRoom);
     setInterval(syncRoom, 2500);
 
     document.querySelectorAll(".setup-player-name-input, .class-input, .universe-input, .fate-input, .appearance-input, .abilities-input, .senses-input, .gear-input, .tone-input, .difficulty-input, .canon-input, #characterIdea").forEach((input) => {
