@@ -1806,6 +1806,10 @@
     let introMusicNodes = [];
     let introMusicTimer = null;
     let introMusicStarted = false;
+    let sheetAudioContext = null;
+    let sheetMusicNodes = [];
+    let sheetMusicTimer = null;
+    let sheetMusicStarted = false;
     let startTransitionTimer = null;
     let clickAudioContext = null;
     const universeOptions = [
@@ -2030,6 +2034,91 @@
       }, 900);
     }
 
+    function startSheetMusic() {
+      if (sheetMusicStarted) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+
+      sheetMusicStarted = true;
+      sheetAudioContext = new AudioContext();
+      const master = sheetAudioContext.createGain();
+      const filter = sheetAudioContext.createBiquadFilter();
+      const delay = sheetAudioContext.createDelay();
+      const feedback = sheetAudioContext.createGain();
+      const volume = Number(document.querySelector(".volume-control")?.value || 0.75);
+
+      filter.type = "lowpass";
+      filter.frequency.value = 1800;
+      delay.delayTime.value = 0.42;
+      feedback.gain.value = 0.22;
+      master.gain.setValueAtTime(0.0001, sheetAudioContext.currentTime);
+      master.gain.exponentialRampToValueAtTime(0.22 * volume, sheetAudioContext.currentTime + 1.4);
+
+      filter.connect(delay);
+      delay.connect(feedback);
+      feedback.connect(delay);
+      delay.connect(master);
+      filter.connect(master);
+      master.connect(sheetAudioContext.destination);
+      sheetMusicNodes.push(master, filter, delay, feedback);
+
+      const padNotes = [110, 146.83, 196, 246.94];
+      padNotes.forEach((frequency, index) => {
+        const oscillator = sheetAudioContext.createOscillator();
+        const gain = sheetAudioContext.createGain();
+        oscillator.type = index % 2 ? "triangle" : "sine";
+        oscillator.frequency.value = frequency;
+        gain.gain.value = 0.035;
+        oscillator.connect(gain);
+        gain.connect(filter);
+        oscillator.start();
+        sheetMusicNodes.push(oscillator, gain);
+      });
+
+      const melody = [293.66, 329.63, 392, 440, 392, 329.63, 246.94, 293.66];
+      let step = 0;
+      sheetMusicTimer = setInterval(() => {
+        if (!sheetAudioContext) return;
+        const now = sheetAudioContext.currentTime;
+        const oscillator = sheetAudioContext.createOscillator();
+        const gain = sheetAudioContext.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.value = melody[step % melody.length];
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.09, now + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.2);
+        oscillator.connect(gain);
+        gain.connect(filter);
+        oscillator.start(now);
+        oscillator.stop(now + 1.25);
+        step += 1;
+      }, 900);
+    }
+
+    function stopSheetMusic() {
+      if (!sheetAudioContext) return;
+      clearInterval(sheetMusicTimer);
+      const now = sheetAudioContext.currentTime;
+      const master = sheetMusicNodes[0];
+      if (master?.gain) {
+        master.gain.cancelScheduledValues(now);
+        master.gain.setValueAtTime(master.gain.value, now);
+        master.gain.exponentialRampToValueAtTime(0.0001, now + 0.8);
+      }
+
+      setTimeout(() => {
+        sheetMusicNodes.forEach((node) => {
+          if (typeof node.stop === "function") {
+            try { node.stop(); } catch (error) {}
+          }
+        });
+        sheetAudioContext.close();
+        sheetAudioContext = null;
+        sheetMusicNodes = [];
+        sheetMusicStarted = false;
+      }, 900);
+    }
+
     function playButtonSound() {
       if (!document.querySelector(".sound-toggle")?.checked) return;
       const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -2130,13 +2219,17 @@
       if (document.body.classList.contains("is-playing")) {
         document.body.classList.remove("is-playing");
         document.body.classList.add("is-configuring");
+        startSheetMusic();
       } else if (document.body.classList.contains("is-configuring")) {
         document.body.classList.remove("is-configuring");
+        startSheetMusic();
       } else if (document.body.classList.contains("has-started")) {
         document.body.classList.remove("has-started");
+        stopSheetMusic();
         stopIntroMusic();
       } else if (document.body.classList.contains("has-continued")) {
         document.body.classList.remove("has-continued");
+        stopSheetMusic();
         stopIntroMusic();
       }
       saveState();
@@ -2152,6 +2245,7 @@
 
     window.addEventListener("pointerup", () => {
       document.body.classList.remove("is-pressing");
+      if (document.body.classList.contains("has-continued") || document.body.classList.contains("has-started") || document.body.classList.contains("is-configuring") || document.body.classList.contains("is-playing")) return;
       document.body.classList.add("has-continued");
       startIntroMusic();
     });
@@ -2166,6 +2260,7 @@
         stopIntroMusic();
         document.body.classList.remove("is-world-transitioning");
         document.body.classList.add("has-started");
+        startSheetMusic();
         saveState();
       }, 12200);
     });
@@ -2900,6 +2995,7 @@
     document.querySelector(".character-screen .continue-button").addEventListener("click", () => {
       renderLinkedDataSummary();
       document.body.classList.add("is-configuring");
+      startSheetMusic();
       saveState();
     });
 
@@ -2907,6 +3003,7 @@
       renderPlaySheet();
       document.body.classList.remove("is-configuring");
       document.body.classList.add("is-playing");
+      stopSheetMusic();
       refreshPowerBreakdown(`Campaign start. Starting scene: ${getCharacterSheet().startingScene}. Use the character sheet, recap, and requested tracking fields to initialize the console.`);
       saveState();
       if (document.querySelector(".auto-read-toggle").checked) {
@@ -3286,12 +3383,17 @@
         if (state.stage === "setup" || state.stage === "settings" || state.stage === "playing") {
           document.body.classList.add("has-started");
         }
+        if (state.stage === "setup") {
+          startSheetMusic();
+        }
         if (state.stage === "settings") {
           document.body.classList.add("is-configuring");
+          startSheetMusic();
         }
         if (state.stage === "playing") {
           renderPlaySheet();
           document.body.classList.add("is-playing");
+          stopSheetMusic();
           if (state.powerBreakdown) setPowerBreakdown(state.powerBreakdown);
           if (state.breakdownLiveInstructions) document.querySelector(".breakdown-live-input").value = state.breakdownLiveInstructions;
           if (state.scan) document.querySelector(".scan-output").textContent = state.scan;
