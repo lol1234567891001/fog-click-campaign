@@ -1318,6 +1318,10 @@
               <div class="room-status campaign-save-status">Local autosave is on.</div>
             </div>
           </section>
+          <section class="settings-group">
+            <h3>Linked Character Data</h3>
+            <div class="power-breakdown linked-data-summary">Character data will appear here before you enter the game.</div>
+          </section>
         </div>
       </div>
     </section>
@@ -1744,12 +1748,27 @@
       });
     }
 
+    function renderLinkedDataSummary() {
+      const sheet = getCharacterSheet();
+      document.querySelector(".linked-data-summary").textContent =
+        `Player: ${sheet.playerName}\n` +
+        `Power: ${sheet.power}\n` +
+        `Universe: ${sheet.universe}\n` +
+        `Fate: ${sheet.fate}\n` +
+        `Appearance: ${sheet.appearance}\n\n` +
+        `Abilities: ${sheet.abilities}\n\n` +
+        `Passive Senses: ${sheet.senses}\n\n` +
+        `Gear: ${sheet.gear}\n\n` +
+        `Campaign: ${sheet.campaign.tone}, ${sheet.campaign.difficulty}, ${sheet.campaign.canon}`;
+    }
+
     document.querySelector(".ai-button").addEventListener("click", async () => {
       const reply = replyInput.value.trim();
       const initialIdea = ideaInput.value.trim();
       const payload = {
         characterIdea: initialIdea,
         characterClass: document.querySelector(".class-input").value,
+        sheet: getCharacterSheet(),
         message: reply || initialIdea,
         history: chatHistory,
       };
@@ -1789,10 +1808,7 @@
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            power: document.querySelector(".class-input").value,
-            universe: document.querySelector(".universe-input").value,
-            fate: document.querySelector(".fate-input").value,
-            appearance: document.querySelector(".appearance-input").value,
+            ...getCharacterSheet(),
             characterIdea: ideaInput.value,
           }),
         });
@@ -1893,6 +1909,7 @@
     }
 
     document.querySelector(".character-screen .continue-button").addEventListener("click", () => {
+      renderLinkedDataSummary();
       document.body.classList.add("is-configuring");
       saveState();
     });

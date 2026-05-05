@@ -180,6 +180,7 @@ async function characterGuide(request, response) {
   const body = await readJson(request);
   const characterIdea = String(body.characterIdea || "").trim();
   const characterClass = String(body.characterClass || "").trim() || "Wanderer";
+  const sheet = body.sheet || {};
   const currentMessage = String(body.message || characterIdea || "").trim();
   const history = Array.isArray(body.history) ? body.history.slice(-12) : [];
 
@@ -221,6 +222,7 @@ async function characterGuide(request, response) {
           content:
             `Character idea anchor: ${characterIdea || "No idea provided"}\n` +
             `Current power/class field: ${characterClass}\n` +
+            `Full character sheet JSON:\n${JSON.stringify(sheet, null, 2)}\n` +
             "Use this as persistent character context unless the player asks to change it.",
         },
         ...history
@@ -398,10 +400,15 @@ async function scaleStats(request, response) {
   }
 
   const prompt =
+    `Player name: ${String(body.playerName || "Player")}\n` +
     `Power/class: ${String(body.power || "Unwritten")}\n` +
     `Universe/verse: ${String(body.universe || "Original fantasy")}\n` +
     `Fate: ${String(body.fate || "Unwritten")}\n` +
     `Appearance: ${String(body.appearance || "Unwritten")}\n` +
+    `Abilities: ${String(body.abilities || "Unwritten")}\n` +
+    `Passive senses: ${String(body.senses || "Unwritten")}\n` +
+    `Gear: ${String(body.gear || "Unwritten")}\n` +
+    `Campaign settings: ${JSON.stringify(body.campaign || {})}\n` +
     `Character idea: ${String(body.characterIdea || "No extra idea")}\n\n` +
     "Scale the character's base stats to the chosen universe. Use comparison language, not numbers. " +
     "For each stat, compare to known tiers or characters from that universe if useful. " +
