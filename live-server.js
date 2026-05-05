@@ -434,9 +434,11 @@ async function scaleStats(request, response) {
     `Campaign settings: ${JSON.stringify(body.campaign || {})}\n` +
     `Story recap / prior canon: ${String(body.storyRecap || body.recap || "No prior story recap")}\n` +
     `Character idea: ${String(body.characterIdea || "No extra idea")}\n\n` +
-    "Scale the character's current stats to the chosen universe and the story recap. Include earned growth, injuries, feats, transformations, gear upgrades, or losses from the recap when relevant. Use comparison language, not numbers. " +
-    "For each stat, compare to known tiers or characters from that universe if useful. " +
-    "If the user mentions a copyrighted universe, comparisons are allowed but do not write long copied lore.";
+    "Act as a strict power-scaling judge, not a story writer. Read the recap and sheet for actual feats, stated abilities, gear, injuries, limits, and outcomes. " +
+    "Scale the character's current stats to the chosen universe from evidence only. If the recap proves the character can fight a top-tier character, say that; if it does not prove it, say the closest supported tier and what evidence is missing. " +
+    "Do not invent random feats, random upgrades, random enemies defeated, or random comparisons. Do not generate story prompts. " +
+    "Use concise comparison language like 'below Gojo but above most Grade 1 sorcerers because...', 'can physically contend with Maki-level fighters if the suit is active...', or 'unknown: no speed feat in recap.' " +
+    "For each stat, include the evidence basis in the same sentence. Comparisons to known characters/tier names are allowed, but keep them short.";
 
   const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
     method: "POST",
@@ -448,14 +450,14 @@ async function scaleStats(request, response) {
     },
     body: JSON.stringify({
       model: openRouterModel,
-      max_tokens: 360,
-      temperature: 0.55,
+      max_tokens: 520,
+      temperature: 0.15,
       response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
           content:
-            "Return only valid JSON with this exact shape: {\"stats\":{\"strength\":\"...\",\"dexterity\":\"...\",\"constitution\":\"...\",\"intelligence\":\"...\",\"wisdom\":\"...\",\"charisma\":\"...\"}}. Each value must be one concise sentence. Stats should be comparative scaling for a story campaign, not D&D dice scores.",
+            "Return only valid JSON with this exact shape: {\"stats\":{\"strength\":\"...\",\"dexterity\":\"...\",\"constitution\":\"...\",\"intelligence\":\"...\",\"wisdom\":\"...\",\"charisma\":\"...\"}}. Each value must be one evidence-based power-scaling sentence, not a story prompt and not a D&D dice score. If evidence is weak or missing, say 'unknown' or 'not proven' for that stat instead of inventing scaling. Be conservative and consistent with the recap.",
         },
         { role: "user", content: prompt },
       ],
