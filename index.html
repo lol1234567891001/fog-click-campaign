@@ -231,6 +231,27 @@
       transition: opacity 650ms ease, transform 650ms ease;
     }
 
+    .play-screen::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px),
+        radial-gradient(circle at 70% 20%, rgba(185, 28, 28, 0.18), transparent 34%),
+        linear-gradient(135deg, rgba(0, 0, 0, 0.24), rgba(127, 29, 29, 0.14));
+      mix-blend-mode: overlay;
+      opacity: 0.72;
+    }
+
+    .play-screen::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle, transparent 45%, rgba(0, 0, 0, 0.58));
+    }
+
     .game-layout {
       width: 100%;
       height: 100%;
@@ -262,13 +283,21 @@
     }
 
     .hud-panel {
-      border: 2px solid rgba(255, 255, 255, 0.72);
+      border: 2px solid rgba(248, 113, 113, 0.42);
       background:
-        linear-gradient(rgba(16, 12, 7, 0.88), rgba(9, 7, 5, 0.9)),
-        radial-gradient(circle at 50% 0%, rgba(250, 204, 21, 0.12), transparent 38%);
-      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.72), inset 0 0 0 1px rgba(250, 204, 21, 0.18);
+        linear-gradient(rgba(16, 12, 7, 0.91), rgba(7, 5, 5, 0.94)),
+        radial-gradient(circle at 50% 0%, rgba(248, 113, 113, 0.12), transparent 38%);
+      box-shadow: 0 28px 90px rgba(0, 0, 0, 0.78), inset 0 0 0 1px rgba(250, 204, 21, 0.13);
       padding: clamp(1rem, 3vw, 2rem);
       color: #fff7ed;
+    }
+
+    body.is-playing .hud-panel {
+      border-radius: 0;
+      box-shadow:
+        0 28px 90px rgba(0, 0, 0, 0.78),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 0 42px rgba(127, 29, 29, 0.18);
     }
 
     .character-sheet {
@@ -333,13 +362,20 @@
     }
 
     .power-breakdown,
-    .scan-output {
+    .scan-output,
+    .memory-output {
       min-height: 76px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(0, 0, 0, 0.24);
+      border: 1px solid rgba(248, 113, 113, 0.22);
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.34), rgba(0, 0, 0, 0.2)),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px 12px);
       padding: 0.75rem;
       line-height: 1.35;
       white-space: pre-wrap;
+    }
+
+    body.threat-pulse .console-panel {
+      animation: threatPulse 520ms ease-in-out 2;
     }
 
     .console-stat {
@@ -815,8 +851,8 @@
 
     .action-option {
       min-height: 72px;
-      border: 1px solid rgba(255, 255, 255, 0.48);
-      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(248, 113, 113, 0.48);
+      background: rgba(127, 29, 29, 0.14);
       color: #fff;
       font: inherit;
       font-weight: 900;
@@ -829,6 +865,18 @@
       border-color: #fff;
       background: rgba(255, 255, 255, 0.16);
       outline: none;
+    }
+
+    @keyframes threatPulse {
+      0%, 100% {
+        border-color: rgba(248, 113, 113, 0.42);
+        filter: none;
+      }
+
+      50% {
+        border-color: rgba(255, 255, 255, 0.95);
+        filter: brightness(1.25) saturate(1.25);
+      }
     }
 
     @media (max-width: 760px) {
@@ -1099,6 +1147,10 @@
               <h3>Scan</h3>
               <div class="scan-output">No sense data yet. Use your power to scan, sense, track, or detect something in the scene.</div>
             </section>
+            <section class="console-section">
+              <h3>Memory</h3>
+              <div class="memory-output">No canon recorded yet.</div>
+            </section>
           </aside>
           <section class="hud-panel game-master">
             <h3>Adventure</h3>
@@ -1134,7 +1186,7 @@
           </section>
         </div>
         <section class="hud-panel action-bar">
-          <h3>Actions</h3>
+          <h3>Choices</h3>
           <div class="action-options">
             <button class="action-option" type="button" data-action="Use my power to sense the area.">Sense</button>
             <button class="action-option" type="button" data-action="Train my abilities for a while.">Train</button>
@@ -1268,6 +1320,43 @@
       });
     }
 
+    function playAlertSound(type = "scan") {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+
+      if (!clickAudioContext) {
+        clickAudioContext = new AudioContext();
+      }
+
+      const now = clickAudioContext.currentTime;
+      const oscillator = clickAudioContext.createOscillator();
+      const gain = clickAudioContext.createGain();
+      const filter = clickAudioContext.createBiquadFilter();
+
+      oscillator.type = type === "danger" ? "sawtooth" : "triangle";
+      oscillator.frequency.setValueAtTime(type === "danger" ? 92 : 880, now);
+      oscillator.frequency.exponentialRampToValueAtTime(type === "danger" ? 58 : 1320, now + 0.34);
+      filter.type = "lowpass";
+      filter.frequency.value = type === "danger" ? 680 : 2400;
+      gain.gain.setValueAtTime(0.0001, now);
+      gain.gain.exponentialRampToValueAtTime(type === "danger" ? 0.22 : 0.12, now + 0.025);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + (type === "danger" ? 0.9 : 0.42));
+
+      oscillator.connect(filter);
+      filter.connect(gain);
+      gain.connect(clickAudioContext.destination);
+      oscillator.start(now);
+      oscillator.stop(now + (type === "danger" ? 1 : 0.5));
+    }
+
+    function pulseThreat() {
+      document.body.classList.remove("threat-pulse");
+      requestAnimationFrame(() => {
+        document.body.classList.add("threat-pulse");
+        setTimeout(() => document.body.classList.remove("threat-pulse"), 1200);
+      });
+    }
+
     function goBackOneScreen() {
       if (document.body.classList.contains("is-playing")) {
         document.body.classList.remove("is-playing");
@@ -1355,6 +1444,7 @@
         latestNarration,
         powerBreakdown: document.querySelector(".power-breakdown")?.textContent || "",
         scan: document.querySelector(".scan-output")?.textContent || "",
+        memory: document.querySelector(".memory-output")?.textContent || "",
         room: currentRoom,
         player: currentPlayer,
       };
@@ -1600,9 +1690,19 @@
         }
         if (data.scan) {
           document.querySelector(".scan-output").textContent = data.scan;
+          playAlertSound(data.threat ? "danger" : "scan");
+        }
+        if (data.threat) {
+          pulseThreat();
         }
         if (data.powerBreakdown) {
           document.querySelector(".power-breakdown").textContent = data.powerBreakdown;
+        }
+        if (data.memory) {
+          document.querySelector(".memory-output").textContent = data.memory;
+        }
+        if (Array.isArray(data.choices) && data.choices.length) {
+          renderActionChoices(data.choices);
         }
         gameHistory.push({ role: "assistant", content: result });
         saveState();
@@ -1629,6 +1729,21 @@
     document.querySelectorAll(".action-option").forEach((button) => {
       button.addEventListener("click", () => sendGameAction(button.dataset.action || button.textContent));
     });
+
+    function renderActionChoices(choices) {
+      const options = document.querySelector(".action-options");
+      options.innerHTML = "";
+      choices.slice(0, 4).forEach((choice) => {
+        const button = document.createElement("button");
+        button.className = "action-option";
+        button.type = "button";
+        button.dataset.action = choice;
+        button.textContent = choice;
+        button.addEventListener("click", () => sendGameAction(choice));
+        options.append(button);
+      });
+      saveState();
+    }
 
     function setRoomStatus(text) {
       roomStatus.textContent = text;
@@ -1712,8 +1827,14 @@
             latestNarration = message.text;
             if (document.querySelector(".auto-read-toggle").checked) speakText(message.text);
           }
-          if (message.scan) document.querySelector(".scan-output").textContent = message.scan;
+          if (message.scan) {
+            document.querySelector(".scan-output").textContent = message.scan;
+            playAlertSound(message.threat ? "danger" : "scan");
+          }
+          if (message.threat) pulseThreat();
           if (message.powerBreakdown) document.querySelector(".power-breakdown").textContent = message.powerBreakdown;
+          if (message.memory) document.querySelector(".memory-output").textContent = message.memory;
+          if (Array.isArray(message.choices) && message.choices.length) renderActionChoices(message.choices);
         });
         lastRoomMessageCount = messages.length;
         saveState();
@@ -1767,6 +1888,7 @@
           document.body.classList.add("is-playing");
           if (state.powerBreakdown) document.querySelector(".power-breakdown").textContent = state.powerBreakdown;
           if (state.scan) document.querySelector(".scan-output").textContent = state.scan;
+          if (state.memory) document.querySelector(".memory-output").textContent = state.memory;
         }
 
         if (chatHistory.length) {

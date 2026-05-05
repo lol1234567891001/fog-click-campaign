@@ -178,7 +178,7 @@ async function gameMaster(request, response) {
         {
           role: "system",
           content:
-            "You are a solo campaign game master. Use the character sheet as hard context for what the player can do. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling or power, narrate an attempted failure clearly, for example: 'You try, but you are not strong enough.' Do not grant new powers or rewrite the sheet unless the player earns it. Keep continuity from history. Return only valid JSON with this shape: {\"message\":\"campaign narration plus 2-3 options\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"optional updated power console text or empty string\"}. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's power and scaling: a tech suit might report signatures, motion, heat, energy, or tactical threats; cursed energy sensing should report cursed energy presence and pressure; mana sensing should report mana density or nearby magic; weak senses should give vague results and strong senses should give clearer results.",
+            "You are a gritty solo campaign game master. Use the character sheet as hard context for what the player can do. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling or power, narrate an attempted failure clearly, for example: 'You try, but you are not strong enough.' Do not grant new powers or rewrite the sheet unless the player earns it. Keep continuity from history. Style: tense, cinematic, sensory, direct, dangerous; avoid cheerful tutorial phrasing. Return only valid JSON with this shape: {\"message\":\"1-2 gritty paragraphs plus a short 'What do you do?' line\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"optional updated power console text or empty string\",\"memory\":\"updated canon/memory notes or empty string\",\"choices\":[\"2-4 short action choices\"],\"threat\":true_or_false}. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's power and scaling: a tech suit might report signatures, motion, heat, energy, or tactical threats; cursed energy sensing should report cursed energy presence and pressure; mana sensing should report mana density or nearby magic; weak senses should give vague results and strong senses should give clearer results. Set threat true when danger, hostile energy, pursuit, injury, or alarm is present. Keep memory as concise canon: current objective, injuries, allies, enemies, learned facts, power limits.",
         },
         {
           role: "user",
@@ -213,9 +213,12 @@ async function gameMaster(request, response) {
       message: parsed.message || "The world waits in silence.",
       scan: parsed.scan || "",
       powerBreakdown: parsed.powerBreakdown || "",
+      memory: parsed.memory || "",
+      choices: Array.isArray(parsed.choices) ? parsed.choices : [],
+      threat: Boolean(parsed.threat),
     });
   } catch (error) {
-    sendJson(response, 200, { message: content || "The world waits in silence.", scan: "", powerBreakdown: "" });
+    sendJson(response, 200, { message: content || "The world waits in silence.", scan: "", powerBreakdown: "", memory: "", choices: [], threat: false });
   }
 }
 
@@ -275,6 +278,9 @@ async function runRoomTurn(room) {
     text: responsePayload?.message || "The world waits.",
     scan: responsePayload?.scan || "",
     powerBreakdown: responsePayload?.powerBreakdown || "",
+    memory: responsePayload?.memory || "",
+    choices: responsePayload?.choices || [],
+    threat: Boolean(responsePayload?.threat),
   });
 }
 
