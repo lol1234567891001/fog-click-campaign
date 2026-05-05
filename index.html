@@ -1393,7 +1393,7 @@
     }
 
     body.is-world-transitioning .transition-gate {
-      animation: gateOpen 12s ease-in-out both;
+      animation: gateOpen 14s ease-in-out both;
     }
 
     body.is-world-transitioning .world-card {
@@ -1451,9 +1451,10 @@
     }
 
     body.is-world-transitioning .transition-flash {
-      animation: transitionFlash 12s ease-in-out both;
+      animation: transitionFlash 14s ease-in-out both;
     }
 
+    .many-more-title,
     .journey-begins-title {
       position: absolute;
       inset: 0;
@@ -1470,8 +1471,12 @@
       padding: 2rem;
     }
 
+    body.is-world-transitioning .many-more-title {
+      animation: manyMore 14s ease-in-out both;
+    }
+
     body.is-world-transitioning .journey-begins-title {
-      animation: journeyBegins 12s ease-in-out both;
+      animation: journeyBegins 14s ease-in-out both;
     }
 
     body.is-world-transitioning .journey-ui {
@@ -1678,17 +1683,34 @@
     }
 
     @keyframes journeyBegins {
-      0%, 82% {
+      0%, 88% {
         opacity: 0;
         transform: translateY(18px) scale(0.96);
       }
 
-      88%, 96% {
+      92%, 98% {
         opacity: 1;
         transform: translateY(0) scale(1);
       }
 
       100% {
+        opacity: 0;
+        transform: translateY(-12px) scale(1.02);
+      }
+    }
+
+    @keyframes manyMore {
+      0%, 76% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+      }
+
+      80%, 87% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      90%, 100% {
         opacity: 0;
         transform: translateY(-12px) scale(1.02);
       }
@@ -1870,6 +1892,7 @@
         <article class="world-card"><img src="assets/transition-fantasy.gif" alt=""><span>Custom Fantasy</span></article>
       </div>
       <div class="transition-gate"></div>
+      <div class="many-more-title">And many more</div>
       <div class="journey-begins-title">Your journey begins here</div>
       <div class="transition-flash"></div>
     </section>
@@ -2239,6 +2262,11 @@
       { value: "Bleach", label: "Bleach" },
       { value: "One Piece", label: "One Piece" },
       { value: "Chainsaw Man", label: "Chainsaw Man" },
+      { value: "Demon Slayer", label: "Demon Slayer" },
+      { value: "Black Clover", label: "Black Clover" },
+      { value: "Fire Force", label: "Fire Force" },
+      { value: "JoJo's Bizarre Adventure", label: "JoJo" },
+      { value: "Solo Leveling", label: "Solo Leveling" },
       { value: "Original fantasy", label: "Original World" },
       { value: "custom", label: "Custom..." },
     ];
@@ -2270,6 +2298,21 @@
       { universe: "Chainsaw Man", label: "Public Safety intake", text: "I begin at Public Safety intake after surviving a devil incident, where my contract, hybrid state, or fiend nature determines who trusts me." },
       { universe: "Chainsaw Man", label: "Devil attack cleanup", text: "I start during the aftermath of a devil attack, with civilians trapped nearby and hunters arguing over whether I am an asset or a threat." },
       { universe: "Chainsaw Man", label: "Back alley contract", text: "I begin in a back alley with a devil offering survival at a price, moments before Public Safety and hostile devils close in." },
+      { universe: "Demon Slayer", label: "Final Selection survivor", text: "I begin at Final Selection on Mount Fujikasane, where my breathing style, blade color, and survival instincts are tested against demons in the wisteria prison." },
+      { universe: "Demon Slayer", label: "First official mission", text: "I start as a new Demon Slayer sent to a town where disappearances, a strange Blood Demon Art, and rumors of a Twelve Kizuki connection overlap." },
+      { universe: "Demon Slayer", label: "Hashira training arrival", text: "I begin during a brutal Hashira training period, carrying a rare style or demonic condition that makes the Corps watch me closely." },
+      { universe: "Black Clover", label: "Grimoire ceremony", text: "I begin at a grimoire ceremony where my magic attribute reveals itself in a way that catches the attention of Magic Knight squads and nobles." },
+      { universe: "Black Clover", label: "Magic Knights exam", text: "I start at the Magic Knights entrance exam, where my grimoire, mana control, and unusual attribute are judged in front of every squad captain." },
+      { universe: "Black Clover", label: "Dungeon mission", text: "I begin on a dungeon expedition where ancient magic, rival kingdoms, devils, and hidden spells turn a simple mission into a race." },
+      { universe: "Fire Force", label: "Special Fire Force recruit", text: "I begin as a new Special Fire Force recruit after my ignition ability activates during an Infernal incident and draws Company attention." },
+      { universe: "Fire Force", label: "Adolla-linked emergency", text: "I start during an Adolla-linked emergency where flames behave wrong, voices call through the heat, and White-Clad agents move nearby." },
+      { universe: "Fire Force", label: "Company investigation", text: "I begin on a Company investigation into suspicious combustions, where my generation type and ignition ability decide who trusts me." },
+      { universe: "JoJo's Bizarre Adventure", label: "Stand awakening", text: "I begin when my Stand awakens during a bizarre attack, leaving me with a power I barely understand and enemies already tracking me." },
+      { universe: "JoJo's Bizarre Adventure", label: "Road trip encounter", text: "I start on a tense road trip where Stand users keep appearing, each fight becoming a puzzle with life-or-death rules." },
+      { universe: "JoJo's Bizarre Adventure", label: "Morioh mystery", text: "I begin in a strange town where Stand arrows, missing people, and ordinary streets hide impossible battles." },
+      { universe: "Solo Leveling", label: "Double dungeon survivor", text: "I begin after surviving a double dungeon incident, with the System or a hidden class beginning to reshape my stats and fate." },
+      { universe: "Solo Leveling", label: "Hunter Association retest", text: "I start during a Hunter Association retest where my rank, class, and hidden growth confuse the examiners." },
+      { universe: "Solo Leveling", label: "Red gate incident", text: "I begin inside a Red Gate where the environment turns lethal, party trust collapses, and my abilities must carry the raid." },
       { universe: "Original fantasy", label: "Original city gate", text: "I begin at the gate of a dangerous city where guilds, nobles, criminals, and supernatural factions all sense my arrival." },
       { universe: "Original fantasy", label: "Forest awakening", text: "I wake in a mist-heavy forest after a power surge, with signs of a nearby settlement and something tracking me." },
       { universe: "Original fantasy", label: "Academy summons", text: "I begin after receiving a summons to an elite academy that studies dangerous powers, where my entrance test is already underway." },
@@ -2647,6 +2690,80 @@
       makePower("hxh-postmortem-nen", "Hunter x Hunter", "Post-Mortem Nen", "Aura becomes stronger after death through vows, revenge curses, lingering guardians, traps, or inherited will.", "Death vow pressure, lingering aura.", "Personal vow object.", "Death condition, curse target, aura intensity, release terms."),
       makePower("csm-mirror-devil", "Chainsaw Man", "Mirror Devil Contract", "Use reflections for spying, ambush angles, duplicate images, fear-based mirror traps, and escape through reflected surfaces.", "Reflection awareness, watched-target pressure.", "Mirror shard or compact.", "Reflections linked, contract cost, line of sight, shatter risk.")
     );
+    const waveTwoTemplates = {
+      breathing: {
+        abilities: "Breathing-form swordplay with named forms, footwork chains, defensive counters, focused burst attacks, total concentration recovery, and style-specific finishing techniques.",
+        senses: "Opening-thread instinct, breathing rhythm, bloodlust pressure, demon scent or sound cues, muscle fatigue awareness.",
+        gear: "Nichirin blade, uniform, wisteria supplies, repair kit.",
+        tracks: "Breathing form, lung strain, blade condition, demon weaknesses, total concentration uptime."
+      },
+      bda: {
+        abilities: "Blood Demon Art techniques, regeneration, demonic body changes, area control, illusion or projectile pressure, and hunger-fueled power spikes.",
+        senses: "Blood scent, prey location, wisteria danger, sunlight timer, regeneration feedback.",
+        gear: "No required gear; optional disguise or demon restraint.",
+        tracks: "Blood consumed, regeneration, sunlight risk, Blood Demon Art output, hunger control."
+      },
+      magic: {
+        abilities: "Grimoire-based spellcasting with attack spells, reinforcement, creation magic, movement tricks, defensive arrays, combination spells, and attribute evolution.",
+        senses: "Mana flow, spell resonance, anti-magic disruption, ki hints, grimoire page readiness.",
+        gear: "Grimoire, wand or weapon focus, Magic Knight robe.",
+        tracks: "Mana reserves, active spell, grimoire pages, attribute matchup, mana zone control."
+      },
+      devil: {
+        abilities: "Devil-linked magic, forbidden transformations, curse effects, contract boosts, body alteration, underworld pressure, and high-risk spell amplification.",
+        senses: "Devil presence, negative mana, contract backlash, curse resonance.",
+        gear: "Grimoire or devil-binding focus.",
+        tracks: "Devil influence, contract stage, forbidden power output, backlash, corruption risk."
+      },
+      ignition: {
+        abilities: "Pyrokinetic ignition ability with mobility, heat shaping, explosive strikes, plasma or flame constructs, defensive burn fields, and generation-specific tricks.",
+        senses: "Heat signatures, oxygen flow, Adolla pressure, ignition feedback, Infernal presence.",
+        gear: "Fire-resistant coat, oxygen mask, Company gear.",
+        tracks: "Ignition output, overheating, oxygen, Adolla link, flame control."
+      },
+      adolla: {
+        abilities: "Adolla-linked phenomena, grace amplification, reality-bending flame movement, visions, time or perception distortion, and evangelist-pressure effects.",
+        senses: "Adolla Link, pillar resonance, preacher presence, heat-vision flashes.",
+        gear: "Company gear or White-Clad bindings.",
+        tracks: "Adolla connection, grace state, mental stability, heat output, link visions."
+      },
+      stand: {
+        abilities: "Stand ability with a unique rule, close-range or remote pressure, puzzle-combat applications, defensive counters, and evolution potential.",
+        senses: "Stand range, enemy Stand pressure, rule activation, damage reflection, user location hints.",
+        gear: "Stand focus optional; personal object or arrow history.",
+        tracks: "Stand range, active rule, user damage, cooldown, evolution progress."
+      },
+      hamon: {
+        abilities: "Ripple breathing channels sunlight energy through strikes, healing, liquid conduction, anti-undead attacks, and body reinforcement.",
+        senses: "Breath rhythm, sunlight charge, undead presence, body flow.",
+        gear: "Conductive tools, oil, scarf or weapon.",
+        tracks: "Ripple charge, breath control, sunlight access, body strain, undead damage."
+      },
+      hunter: {
+        abilities: "Hunter class skills, stat growth, weapon arts, dungeon tactics, boss pressure, party utility, and System-supported progression.",
+        senses: "Mana signature, monster rank, dungeon danger, quest alerts, stat-growth feedback.",
+        gear: "Hunter weapon, armor, raid supplies, mana crystals.",
+        tracks: "Level, class skill cooldowns, mana, fatigue, dungeon rank, loot."
+      },
+      monarch: {
+        abilities: "Monarch or ruler-grade power with summons, authority, domain pressure, army command, regeneration, and world-scale intimidation.",
+        senses: "Monarch presence, shadow or mana army links, enemy rank, gate instability.",
+        gear: "Class weapon, command focus, summon anchors.",
+        tracks: "Army count, monarch authority, mana reserves, strongest summon, domain pressure."
+      }
+    };
+    function makeWaveTwoPower(id, universe, name, type) {
+      const template = waveTwoTemplates[type];
+      return makePower(id, universe, name, `${name}: ${template.abilities}`, template.senses, template.gear, template.tracks);
+    }
+    const waveTwoEntries = [
+      ["ds-water-breathing", "Demon Slayer", "Water Breathing", "breathing"], ["ds-thunder-breathing", "Demon Slayer", "Thunder Breathing", "breathing"], ["ds-beast-breathing", "Demon Slayer", "Beast Breathing", "breathing"], ["ds-flame-breathing", "Demon Slayer", "Flame Breathing", "breathing"], ["ds-sound-breathing", "Demon Slayer", "Sound Breathing", "breathing"], ["ds-love-breathing", "Demon Slayer", "Love Breathing", "breathing"], ["ds-mist-breathing", "Demon Slayer", "Mist Breathing", "breathing"], ["ds-stone-breathing", "Demon Slayer", "Stone Breathing", "breathing"], ["ds-wind-breathing", "Demon Slayer", "Wind Breathing", "breathing"], ["ds-serpent-breathing", "Demon Slayer", "Serpent Breathing", "breathing"], ["ds-flower-breathing", "Demon Slayer", "Flower Breathing", "breathing"], ["ds-insect-breathing", "Demon Slayer", "Insect Breathing", "breathing"], ["ds-sun-breathing", "Demon Slayer", "Sun Breathing", "breathing"], ["ds-moon-breathing", "Demon Slayer", "Moon Breathing", "breathing"], ["ds-total-concentration", "Demon Slayer", "Total Concentration Constant", "breathing"], ["ds-demon-slayer-mark", "Demon Slayer", "Demon Slayer Mark", "breathing"], ["ds-transparent-world", "Demon Slayer", "Transparent World", "breathing"], ["ds-selfless-state", "Demon Slayer", "Selfless State", "breathing"], ["ds-red-nichirin", "Demon Slayer", "Bright Red Nichirin Blade", "breathing"], ["ds-poison-blade", "Demon Slayer", "Wisteria Poison Swordplay", "breathing"], ["ds-explosive-beads", "Demon Slayer", "Stone Hashira Chain-Axe Style", "breathing"], ["ds-fast-draw", "Demon Slayer", "Thunderclap Flash Variant", "breathing"], ["ds-dream-bda", "Demon Slayer", "Dream Blood Demon Art", "bda"], ["ds-thread-bda", "Demon Slayer", "Thread Blood Demon Art", "bda"], ["ds-drum-bda", "Demon Slayer", "Drum Room Blood Demon Art", "bda"], ["ds-arrow-bda", "Demon Slayer", "Arrow Vector Blood Demon Art", "bda"], ["ds-temari-bda", "Demon Slayer", "Temari Ball Blood Demon Art", "bda"], ["ds-swamp-bda", "Demon Slayer", "Swamp Blood Demon Art", "bda"], ["ds-sash-bda", "Demon Slayer", "Obi Sash Blood Demon Art", "bda"], ["ds-sickle-bda", "Demon Slayer", "Blood Sickle Poison Art", "bda"], ["ds-ice-bda", "Demon Slayer", "Cryokinetic Blood Demon Art", "bda"], ["ds-pot-bda", "Demon Slayer", "Porcelain Pot Blood Demon Art", "bda"], ["ds-emotion-bda", "Demon Slayer", "Emotion Clone Blood Demon Art", "bda"], ["ds-biokinesis-bda", "Demon Slayer", "Flesh Shaping Blood Demon Art", "bda"], ["ds-fan-bda", "Demon Slayer", "War Fan Demon Art", "bda"], ["ds-speed-demon", "Demon Slayer", "Demonic Speed Regeneration", "bda"], ["ds-nezuko-blood", "Demon Slayer", "Exploding Blood", "bda"], ["ds-tamayo-blood", "Demon Slayer", "Blood Bewitchment", "bda"], ["ds-yushiro-talisman", "Demon Slayer", "Concealment Talisman Art", "bda"], ["ds-muzan-blood", "Demon Slayer", "Demon King Blood", "bda"], ["ds-spider-family", "Demon Slayer", "Spider Demon Physiology", "bda"], ["ds-fish-demon", "Demon Slayer", "Fish Demon Mutation", "bda"], ["ds-speed-clone-demon", "Demon Slayer", "Afterimage Demon Art", "bda"], ["ds-shadow-demon", "Demon Slayer", "Shadow Step Demon Art", "bda"], ["ds-blade-demon", "Demon Slayer", "Blade Flesh Demon Art", "bda"], ["ds-wisteria-bloodline", "Demon Slayer", "Wisteria-Touched Slayer", "breathing"], ["ds-crow-scout", "Demon Slayer", "Kasugai Crow Scout Bond", "breathing"], ["ds-custom-breathing", "Demon Slayer", "Custom Breathing Style", "breathing"],
+      ["bc-anti-magic", "Black Clover", "Anti-Magic", "devil"], ["bc-sword-magic", "Black Clover", "Sword Magic", "magic"], ["bc-dark-magic", "Black Clover", "Dark Magic", "magic"], ["bc-light-magic", "Black Clover", "Light Magic", "magic"], ["bc-time-magic", "Black Clover", "Time Magic", "devil"], ["bc-spatial-magic", "Black Clover", "Spatial Magic", "magic"], ["bc-world-tree", "Black Clover", "World Tree Magic", "magic"], ["bc-dream-magic", "Black Clover", "Dream Magic", "magic"], ["bc-mirror-magic", "Black Clover", "Mirror Magic", "magic"], ["bc-thread-magic", "Black Clover", "Thread Magic", "magic"], ["bc-water-magic", "Black Clover", "Water Magic", "magic"], ["bc-flame-magic", "Black Clover", "Flame Magic", "magic"], ["bc-wind-magic", "Black Clover", "Wind Magic", "magic"], ["bc-earth-magic", "Black Clover", "Earth Magic", "magic"], ["bc-lightning-magic", "Black Clover", "Lightning Magic", "magic"], ["bc-steel-magic", "Black Clover", "Steel Magic", "magic"], ["bc-mercury-magic", "Black Clover", "Mercury Magic", "magic"], ["bc-ash-magic", "Black Clover", "Ash Magic", "magic"], ["bc-cotton-magic", "Black Clover", "Cotton Magic", "magic"], ["bc-painting-magic", "Black Clover", "Painting Magic", "magic"], ["bc-copy-magic", "Black Clover", "Copy Magic", "magic"], ["bc-sealing-magic", "Black Clover", "Sealing Magic", "magic"], ["bc-curse-warding", "Black Clover", "Curse-Warding Magic", "devil"], ["bc-gravity-magic", "Black Clover", "Gravity Magic", "devil"], ["bc-blood-magic", "Black Clover", "Blood Magic", "magic"], ["bc-bone-magic", "Black Clover", "Bone Magic", "magic"], ["bc-body-magic", "Black Clover", "Body Magic", "magic"], ["bc-soul-corpse", "Black Clover", "Soul Corpse Magic", "devil"], ["bc-word-soul", "Black Clover", "Word Soul Magic", "devil"], ["bc-beast-magic", "Black Clover", "Beast Magic", "magic"], ["bc-star-magic", "Black Clover", "Star Magic", "magic"], ["bc-sun-magic", "Black Clover", "Sun Magic", "magic"], ["bc-moon-magic", "Black Clover", "Moon Magic", "magic"], ["bc-spirit-dive", "Black Clover", "Spirit Dive", "magic"], ["bc-mana-zone", "Black Clover", "Mana Zone Specialist", "magic"], ["bc-mana-method", "Black Clover", "Mana Method Arrays", "magic"], ["bc-trap-magic", "Black Clover", "Trap Magic", "magic"], ["bc-compass-magic", "Black Clover", "Compass Magic", "magic"], ["bc-briar-magic", "Black Clover", "Briar Magic", "magic"], ["bc-crystal-magic", "Black Clover", "Crystal Magic", "magic"], ["bc-smoke-magic", "Black Clover", "Smoke Magic", "magic"], ["bc-poison-plant", "Black Clover", "Poison Plant Magic", "magic"], ["bc-chain-magic", "Black Clover", "Chain Magic", "magic"], ["bc-dice-magic", "Black Clover", "Dice Magic", "magic"], ["bc-transformation", "Black Clover", "Transformation Magic", "magic"], ["bc-recombination", "Black Clover", "Attribute Recombination", "magic"], ["bc-devil-union", "Black Clover", "Devil Union", "devil"], ["bc-five-leaf", "Black Clover", "Five-Leaf Grimoire", "devil"],
+      ["ff-devils-footprints", "Fire Force", "Devil's Footprints", "ignition"], ["ff-rapid", "Fire Force", "Rapid", "ignition"], ["ff-plasma-sword", "Fire Force", "Plasma Sword", "ignition"], ["ff-excalibur", "Fire Force", "Excalibur Plasma Blade", "ignition"], ["ff-flame-control", "Fire Force", "Flame Control", "ignition"], ["ff-fire-soldier", "Fire Force", "Second Generation Fire Control", "ignition"], ["ff-third-gen", "Fire Force", "Third Generation Ignition", "ignition"], ["ff-hybrid-gen", "Fire Force", "Second/Third Generation Hybrid", "ignition"], ["ff-adolla-burst", "Fire Force", "Adolla Burst", "adolla"], ["ff-adolla-link", "Fire Force", "Adolla Link", "adolla"], ["ff-grace", "Fire Force", "Evangelist Grace", "adolla"], ["ff-severed-universe", "Fire Force", "Severed Universe", "adolla"], ["ff-time-stop-heat", "Fire Force", "Heat Expansion Time Stop", "adolla"], ["ff-madness-flames", "Fire Force", "Madness Flame Pressure", "adolla"], ["ff-pyrokinetic-cloak", "Fire Force", "Pyrokinetic Cloak", "ignition"], ["ff-rocket-punch", "Fire Force", "Rocket Punch Ignition", "ignition"], ["ff-flame-bullets", "Fire Force", "Flame Bullet Ignition", "ignition"], ["ff-gunpowder-flame", "Fire Force", "Gunpowder Flame Control", "ignition"], ["ff-heat-vision", "Fire Force", "Thermal Vision", "ignition"], ["ff-smoke-fire", "Fire Force", "Smoke Flame", "ignition"], ["ff-ice-fire", "Fire Force", "Thermal Inversion Ice", "ignition"], ["ff-sound-flame", "Fire Force", "Sound-Fire Resonance", "ignition"], ["ff-insect-infernal", "Fire Force", "Insect Infernalization", "adolla"], ["ff-demon-infernal", "Fire Force", "Demon Infernal Form", "adolla"], ["ff-oni-infernal", "Fire Force", "Oni Infernal Physiology", "adolla"], ["ff-ash-flame", "Fire Force", "Ash Flame Constructs", "ignition"], ["ff-blue-flame", "Fire Force", "Blue Flame Output", "ignition"], ["ff-black-smoke", "Fire Force", "Black Smoke Concealment", "ignition"], ["ff-heat-shield", "Fire Force", "Heat Shield", "ignition"], ["ff-flame-whip", "Fire Force", "Flame Whip", "ignition"], ["ff-ember-drones", "Fire Force", "Ember Drones", "ignition"], ["ff-lava-armor", "Fire Force", "Lava Armor", "ignition"], ["ff-spark-step", "Fire Force", "Spark Step", "ignition"], ["ff-combustion-healing", "Fire Force", "Combustion Healing", "ignition"], ["ff-flame-telemetry", "Fire Force", "Flame Telemetry", "ignition"], ["ff-oxygen-control", "Fire Force", "Oxygen Burn Control", "ignition"], ["ff-heat-mirage", "Fire Force", "Heat Mirage", "ignition"], ["ff-solar-flare", "Fire Force", "Solar Flare Ignition", "ignition"], ["ff-dragon-flame", "Fire Force", "Dragon Flame Body", "adolla"], ["ff-corona-burst", "Fire Force", "Corona Burst", "ignition"], ["ff-wildfire-zone", "Fire Force", "Wildfire Zone", "ignition"], ["ff-flame-binding", "Fire Force", "Flame Binding", "ignition"], ["ff-cat-flame", "Fire Force", "Catlike Flame Mobility", "ignition"], ["ff-arthur-delusion", "Fire Force", "Knightly Delusion Boost", "ignition"], ["ff-company-scanner", "Fire Force", "Company Tactical Scanner", "ignition"], ["ff-evangelist-agent", "Fire Force", "White-Clad Agent Kit", "adolla"], ["ff-pillar-candidate", "Fire Force", "Pillar Candidate", "adolla"], ["ff-custom-ignition", "Fire Force", "Custom Ignition Ability", "ignition"],
+      ["jojo-star-platinum", "JoJo", "Star Platinum", "stand"], ["jojo-the-world", "JoJo", "The World", "stand"], ["jojo-crazy-diamond", "JoJo", "Crazy Diamond", "stand"], ["jojo-killer-queen", "JoJo", "Killer Queen", "stand"], ["jojo-gold-experience", "JoJo", "Gold Experience", "stand"], ["jojo-sticky-fingers", "JoJo", "Sticky Fingers", "stand"], ["jojo-aerosmith", "JoJo", "Aerosmith", "stand"], ["jojo-sex-pistols", "JoJo", "Sex Pistols", "stand"], ["jojo-purple-haze", "JoJo", "Purple Haze", "stand"], ["jojo-spice-girl", "JoJo", "Spice Girl", "stand"], ["jojo-king-crimson", "JoJo", "King Crimson", "stand"], ["jojo-silver-chariot", "JoJo", "Silver Chariot", "stand"], ["jojo-hierophant-green", "JoJo", "Hierophant Green", "stand"], ["jojo-magicians-red", "JoJo", "Magician's Red", "stand"], ["jojo-hermit-purple", "JoJo", "Hermit Purple", "stand"], ["jojo-the-fool", "JoJo", "The Fool", "stand"], ["jojo-cream", "JoJo", "Cream", "stand"], ["jojo-heavens-door", "JoJo", "Heaven's Door", "stand"], ["jojo-echoes", "JoJo", "Echoes", "stand"], ["jojo-the-hand", "JoJo", "The Hand", "stand"], ["jojo-red-hot-chili", "JoJo", "Red Hot Chili Pepper", "stand"], ["jojo-surface", "JoJo", "Surface", "stand"], ["jojo-pearl-jam", "JoJo", "Pearl Jam", "stand"], ["jojo-harvest", "JoJo", "Harvest", "stand"], ["jojo-stray-cat", "JoJo", "Stray Cat", "stand"], ["jojo-weather-report", "JoJo", "Weather Report", "stand"], ["jojo-stone-free", "JoJo", "Stone Free", "stand"], ["jojo-kiss", "JoJo", "Kiss", "stand"], ["jojo-foo-fighters", "JoJo", "Foo Fighters", "stand"], ["jojo-diver-down", "JoJo", "Diver Down", "stand"], ["jojo-made-in-heaven", "JoJo", "Made in Heaven", "stand"], ["jojo-white-snake", "JoJo", "Whitesnake", "stand"], ["jojo-c-moon", "JoJo", "C-Moon", "stand"], ["jojo-tusk", "JoJo", "Tusk", "stand"], ["jojo-ball-breaker", "JoJo", "Ball Breaker", "stand"], ["jojo-dirty-deeds", "JoJo", "Dirty Deeds Done Dirt Cheap", "stand"], ["jojo-soft-wet", "JoJo", "Soft & Wet", "stand"], ["jojo-wonder-of-u", "JoJo", "Wonder of U", "stand"], ["jojo-hamon", "JoJo", "Hamon Ripple", "hamon"], ["jojo-spin", "JoJo", "Spin Technique", "hamon"], ["jojo-vampire", "JoJo", "Vampire Physiology", "hamon"], ["jojo-pillar-man", "JoJo", "Pillar Man Physiology", "hamon"], ["jojo-stand-arrow", "JoJo", "Stand Arrow Awakening", "stand"], ["jojo-requiem", "JoJo", "Requiem Evolution", "stand"], ["jojo-custom-stand", "JoJo", "Custom Stand", "stand"], ["jojo-bohemian-rhapsody", "JoJo", "Bohemian Rhapsody", "stand"], ["jojo-metallica", "JoJo", "Metallica", "stand"], ["jojo-grateful-dead", "JoJo", "The Grateful Dead", "stand"],
+      ["sl-necromancer", "Solo Leveling", "Necromancer Class", "monarch"], ["sl-shadow-monarch", "Solo Leveling", "Shadow Monarch", "monarch"], ["sl-shadow-extraction", "Solo Leveling", "Shadow Extraction", "monarch"], ["sl-shadow-exchange", "Solo Leveling", "Shadow Exchange", "monarch"], ["sl-rulers-authority", "Solo Leveling", "Ruler's Authority", "monarch"], ["sl-dagger-assassin", "Solo Leveling", "Dagger Assassin", "hunter"], ["sl-mage-hunter", "Solo Leveling", "Mage Hunter", "hunter"], ["sl-tank-hunter", "Solo Leveling", "Tank Hunter", "hunter"], ["sl-healer-hunter", "Solo Leveling", "Healer Hunter", "hunter"], ["sl-ranger-hunter", "Solo Leveling", "Ranger Hunter", "hunter"], ["sl-fighter-hunter", "Solo Leveling", "Fighter Hunter", "hunter"], ["sl-summoner-hunter", "Solo Leveling", "Summoner Hunter", "hunter"], ["sl-barrier-mage", "Solo Leveling", "Barrier Mage", "hunter"], ["sl-ice-elf-magic", "Solo Leveling", "Ice Elf Magic", "hunter"], ["sl-beast-transformation", "Solo Leveling", "Beast Transformation", "hunter"], ["sl-demon-castle-flame", "Solo Leveling", "Demon Castle Flame", "hunter"], ["sl-knight-killer", "Solo Leveling", "Knight Killer Dagger Style", "hunter"], ["sl-kamish-wrath", "Solo Leveling", "Kamish's Wrath Daggers", "hunter"], ["sl-orb-avarice", "Solo Leveling", "Orb of Avarice", "hunter"], ["sl-stealth", "Solo Leveling", "Stealth Skill", "hunter"], ["sl-dash", "Solo Leveling", "Dash Skill", "hunter"], ["sl-bloodlust", "Solo Leveling", "Bloodlust Skill", "hunter"], ["sl-quick-silver", "Solo Leveling", "Quicksilver Movement", "hunter"], ["sl-vital-strike", "Solo Leveling", "Vital Strike", "hunter"], ["sl-mutilation", "Solo Leveling", "Mutilation Combo", "hunter"], ["sl-dominator-touch", "Solo Leveling", "Dominator's Touch", "monarch"], ["sl-shadow-save", "Solo Leveling", "Shadow Storage", "monarch"], ["sl-igris", "Solo Leveling", "Igris Shadow", "monarch"], ["sl-iron", "Solo Leveling", "Iron Shadow", "monarch"], ["sl-tank-shadow", "Solo Leveling", "Tank Shadow", "monarch"], ["sl-tusk", "Solo Leveling", "Tusk Shadow", "monarch"], ["sl-beru", "Solo Leveling", "Beru Shadow", "monarch"], ["sl-kaisel", "Solo Leveling", "Kaisel Mount", "monarch"], ["sl-greed-shadow", "Solo Leveling", "Greed Shadow", "monarch"], ["sl-bellion", "Solo Leveling", "Bellion Shadow", "monarch"], ["sl-architect-system", "Solo Leveling", "System Quest Interface", "hunter"], ["sl-daily-quest", "Solo Leveling", "Daily Quest Growth", "hunter"], ["sl-penalty-zone", "Solo Leveling", "Penalty Zone Survival", "hunter"], ["sl-shop-system", "Solo Leveling", "System Shop", "hunter"], ["sl-inventory", "Solo Leveling", "Inventory Skill", "hunter"], ["sl-status-recovery", "Solo Leveling", "Status Recovery", "hunter"], ["sl-poison-resist", "Solo Leveling", "Poison Resistance", "hunter"], ["sl-mana-crystal", "Solo Leveling", "Mana Crystal Enhancement", "hunter"], ["sl-gate-sense", "Solo Leveling", "Gate Sense", "hunter"], ["sl-red-gate-survivor", "Solo Leveling", "Red Gate Survivor", "hunter"], ["sl-national-rank", "Solo Leveling", "National Rank Hunter", "hunter"], ["sl-monarch-frost", "Solo Leveling", "Frost Monarch Power", "monarch"], ["sl-monarch-beast", "Solo Leveling", "Beast Monarch Power", "monarch"]
+    ];
+    powerCatalog.push(...waveTwoEntries.map(([id, universe, name, type]) => makeWaveTwoPower(id, universe, name, type)));
     let selectedPowerIds = [];
     const customPowers = new Map();
 
@@ -3073,7 +3190,7 @@
         document.body.classList.add("has-started");
         startSheetMusic();
         saveState();
-      }, 12200);
+      }, 14200);
     });
 
     document.querySelector(".back-button").addEventListener("click", goBackOneScreen);
@@ -3283,7 +3400,7 @@
       placeholder.value = "";
       placeholder.textContent = query ? "Choose from filtered powers..." : "Choose a power...";
       powerSelect.append(placeholder);
-      const groups = ["JJK", "Naruto", "Invincible", "Re:Zero", "MHA", "Hunter x Hunter", "Bleach", "One Piece", "Chainsaw Man", "Original", "Custom"];
+      const groups = ["JJK", "Naruto", "Invincible", "Re:Zero", "MHA", "Hunter x Hunter", "Bleach", "One Piece", "Chainsaw Man", "Demon Slayer", "Black Clover", "Fire Force", "JoJo", "Solo Leveling", "Original", "Custom"];
       groups.forEach((groupName) => {
         const group = document.createElement("optgroup");
         group.label = groupName;
