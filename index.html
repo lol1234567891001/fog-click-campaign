@@ -2480,12 +2480,29 @@
       });
     }
 
-    function restartTransitionGifs() {
-      document.querySelectorAll(".world-card img").forEach((image) => {
-        const source = image.getAttribute("src");
+    function loadTransitionImage(source) {
+      return new Promise((resolve) => {
+        const preview = new Image();
+        preview.onload = () => resolve(source);
+        preview.onerror = () => resolve(source.split("?")[0]);
+        preview.src = source;
+      });
+    }
+
+    async function restartTransitionGifs() {
+      const images = Array.from(document.querySelectorAll(".world-card img"));
+      const cacheKey = Date.now();
+      const sources = images.map((image) => {
+        const source = image.getAttribute("src") || image.dataset.transitionSrc || "";
+        const cleanSource = source.split("?")[0];
+        image.dataset.transitionSrc = cleanSource;
+        return `${cleanSource}?restart=${cacheKey}`;
+      });
+      const readySources = await Promise.all(sources.map(loadTransitionImage));
+      images.forEach((image, index) => {
         image.removeAttribute("src");
         image.offsetHeight;
-        image.setAttribute("src", `${source.split("?")[0]}?t=${Date.now()}`);
+        image.setAttribute("src", readySources[index]);
       });
     }
 
@@ -2527,10 +2544,10 @@
       startIntroMusic();
     });
 
-    document.querySelector(".start-button").addEventListener("click", (event) => {
+    document.querySelector(".start-button").addEventListener("click", async (event) => {
       event.stopPropagation();
       if (document.body.classList.contains("is-world-transitioning")) return;
-      restartTransitionGifs();
+      await restartTransitionGifs();
       document.body.classList.add("is-world-transitioning");
       clearTimeout(startTransitionTimer);
       startTransitionTimer = setTimeout(() => {
