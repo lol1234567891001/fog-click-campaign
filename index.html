@@ -394,6 +394,7 @@
     }
 
     .power-breakdown,
+    .linked-data-summary,
     .scan-output,
     .memory-output,
     .abilities-output,
@@ -1329,7 +1330,7 @@
           </section>
           <section class="settings-group">
             <h3>Linked Character Data</h3>
-            <div class="power-breakdown linked-data-summary">Character data will appear here before you enter the game.</div>
+            <div class="linked-data-summary">Character data will appear here before you enter the game.</div>
           </section>
         </div>
       </div>
@@ -1349,7 +1350,7 @@
             </section>
             <section class="console-section">
               <h3>Power Breakdown</h3>
-              <div class="power-breakdown">Your power details will appear here when the campaign starts.</div>
+              <div class="power-breakdown game-power-breakdown">Your power details will appear here when the campaign starts.</div>
             </section>
             <section class="console-section">
               <h3>Abilities</h3>
@@ -1662,7 +1663,7 @@
         chatHistory,
         gameHistory,
         latestNarration,
-        powerBreakdown: document.querySelector(".power-breakdown")?.textContent || "",
+        powerBreakdown: document.querySelector(".game-power-breakdown")?.textContent || "",
         scan: document.querySelector(".scan-output")?.textContent || "",
         memory: document.querySelector(".memory-output")?.textContent || "",
         abilitiesOutput: document.querySelector(".abilities-output")?.textContent || "",
@@ -1743,7 +1744,7 @@
       const sheet = getCharacterSheet();
       document.querySelector(".play-power").textContent = sheet.power;
       document.querySelector(".play-fate").textContent = sheet.fate;
-      document.querySelector(".power-breakdown").textContent =
+      document.querySelector(".game-power-breakdown").textContent =
         `Power: ${sheet.power}\n` +
         `Universe: ${sheet.universe}\n` +
         `Appearance: ${sheet.appearance}\n\n` +
@@ -1771,7 +1772,7 @@
     }
 
     async function refreshPowerBreakdown(scene = "Campaign start") {
-      const box = document.querySelector(".power-breakdown");
+      const box = document.querySelector(".game-power-breakdown");
       const previous = box.textContent;
       box.textContent = "Power Breakdown AI updating...";
 
@@ -2028,7 +2029,7 @@
           pulseThreat();
         }
         if (data.powerBreakdown) {
-          document.querySelector(".power-breakdown").textContent = data.powerBreakdown;
+          document.querySelector(".game-power-breakdown").textContent = data.powerBreakdown;
         } else {
           refreshPowerBreakdown(result);
         }
@@ -2236,7 +2237,7 @@
             playAlertSound(message.threat ? "danger" : "scan");
           }
           if (message.threat) pulseThreat();
-          if (message.powerBreakdown) document.querySelector(".power-breakdown").textContent = message.powerBreakdown;
+          if (message.powerBreakdown) document.querySelector(".game-power-breakdown").textContent = message.powerBreakdown;
           if (message.speaker === "Narrator" && !message.powerBreakdown) refreshPowerBreakdown(message.text);
           if (message.memory) document.querySelector(".memory-output").textContent = message.memory;
           if (Array.isArray(message.choices) && message.choices.length) renderActionChoices(message.choices);
@@ -2304,7 +2305,7 @@
         if (state.stage === "playing") {
           renderPlaySheet();
           document.body.classList.add("is-playing");
-          if (state.powerBreakdown) document.querySelector(".power-breakdown").textContent = state.powerBreakdown;
+          if (state.powerBreakdown) document.querySelector(".game-power-breakdown").textContent = state.powerBreakdown;
           if (state.scan) document.querySelector(".scan-output").textContent = state.scan;
           if (state.memory) document.querySelector(".memory-output").textContent = state.memory;
           if (state.abilitiesOutput) document.querySelector(".abilities-output").textContent = state.abilitiesOutput;
