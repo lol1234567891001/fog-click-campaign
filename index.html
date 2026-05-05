@@ -1791,7 +1791,13 @@
             scene,
           }),
         });
-        const data = await response.json();
+        const responseText = await response.text();
+        let data;
+        try {
+          data = JSON.parse(responseText);
+        } catch (error) {
+          data = { error: responseText || `HTTP ${response.status}` };
+        }
         if (!response.ok || data.error) {
           box.textContent = `Power Breakdown AI error:\n${data.message || data.error || "Request failed."}`;
           return;
