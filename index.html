@@ -1212,6 +1212,7 @@
     .transition-gate {
       position: absolute;
       inset: 50% auto auto 50%;
+      z-index: 0;
       width: min(58vmin, 520px);
       aspect-ratio: 1;
       border-radius: 999px;
@@ -1227,6 +1228,7 @@
     .transition-worlds {
       position: absolute;
       inset: 0;
+      z-index: 1;
       overflow: hidden;
     }
 
@@ -1236,14 +1238,14 @@
       overflow: hidden;
       opacity: 0;
       filter: saturate(1.1) contrast(1.08);
-      animation: worldClip 8s ease-in-out both;
+      animation: worldClip 1.72s ease-in-out both;
     }
 
-    .world-card:nth-child(1) { animation-delay: 0s; }
-    .world-card:nth-child(2) { animation-delay: 1.45s; }
-    .world-card:nth-child(3) { animation-delay: 2.9s; }
-    .world-card:nth-child(4) { animation-delay: 4.35s; }
-    .world-card:nth-child(5) { animation-delay: 5.8s; }
+    .world-card:nth-child(1) { animation-delay: 0.15s; }
+    .world-card:nth-child(2) { animation-delay: 1.7s; }
+    .world-card:nth-child(3) { animation-delay: 3.25s; }
+    .world-card:nth-child(4) { animation-delay: 4.8s; }
+    .world-card:nth-child(5) { animation-delay: 6.35s; }
 
     .world-card img {
       width: 100%;
@@ -1257,6 +1259,7 @@
       content: "";
       position: absolute;
       inset: 0;
+      z-index: 2;
       background:
         radial-gradient(circle at 50% 42%, transparent 0 38%, rgba(0, 0, 0, 0.42)),
         linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent 20%, transparent 58%, rgba(0, 0, 0, 0.74)),
@@ -1268,7 +1271,7 @@
       position: absolute;
       top: clamp(1.4rem, 5vh, 3rem);
       left: 50%;
-      z-index: 1;
+      z-index: 3;
       width: min(900px, calc(100% - 2rem));
       transform: translateX(-50%);
       text-align: center;
@@ -1380,16 +1383,16 @@
     }
 
     @keyframes worldClip {
-      0%, 4% {
+      0% {
         opacity: 0;
-        transform: scale(1.04);
+        transform: scale(1.035);
       }
 
-      8%, 16% {
+      12%, 78% {
         opacity: 1;
       }
 
-      22%, 100% {
+      100% {
         opacity: 0;
         transform: scale(1);
       }
