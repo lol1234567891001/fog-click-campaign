@@ -1280,8 +1280,12 @@
             <div class="audio-controls" aria-label="Audio narration controls">
               <button class="audio-button read-latest" type="button">Read Latest</button>
               <button class="audio-button stop-reading" type="button">Stop</button>
-              <select class="voice-select" aria-label="Narration voice">
-                <option value="">Default voice</option>
+              <label class="audio-toggle">
+                <input class="narrator-voice-toggle" type="checkbox" checked>
+                Use narrator voice
+              </label>
+              <select class="voice-select" aria-label="Fallback browser voice">
+                <option value="">Browser fallback voice</option>
               </select>
               <label class="rate-wrap">
                 Speed
@@ -1855,22 +1859,24 @@
         narratorAudio = null;
       }
 
-      try {
-        const response = await fetch("/api/narrate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: cleanText }),
-        });
+      if (document.querySelector(".narrator-voice-toggle")?.checked) {
+        try {
+          const response = await fetch("/api/narrate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: cleanText }),
+          });
 
-        if (response.ok) {
-          const blob = await response.blob();
-          narratorAudio = new Audio(URL.createObjectURL(blob));
-          narratorAudio.volume = Number(document.querySelector(".volume-control")?.value || 0.75);
-          await narratorAudio.play();
-          return;
+          if (response.ok) {
+            const blob = await response.blob();
+            narratorAudio = new Audio(URL.createObjectURL(blob));
+            narratorAudio.volume = Number(document.querySelector(".volume-control")?.value || 0.75);
+            await narratorAudio.play();
+            return;
+          }
+        } catch (error) {
+          console.warn("ElevenLabs narration unavailable, using browser voice.", error);
         }
-      } catch (error) {
-        console.warn("ElevenLabs narration unavailable, using browser voice.", error);
       }
 
       if (!("speechSynthesis" in window)) {
@@ -1894,7 +1900,7 @@
       if (!("speechSynthesis" in window)) return;
       const voices = window.speechSynthesis.getVoices();
       const currentValue = voiceSelect.value;
-      voiceSelect.innerHTML = '<option value="">Default voice</option>';
+      voiceSelect.innerHTML = '<option value="">Browser fallback voice</option>';
 
       voices.forEach((voice) => {
         const option = document.createElement("option");
