@@ -746,6 +746,12 @@
       gap: 0.45rem;
     }
 
+    .power-search-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.45rem;
+    }
+
     .power-select,
     .universe-select,
     .power-search-input,
@@ -778,6 +784,17 @@
     .add-power-button {
       border: 1px solid rgba(255, 255, 255, 0.62);
       background: rgba(250, 204, 21, 0.12);
+      color: #fff;
+      padding: 0.42rem 0.7rem;
+      font: inherit;
+      font-weight: 900;
+      cursor: none;
+      text-transform: uppercase;
+    }
+
+    .clear-power-search {
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      background: rgba(0, 0, 0, 0.22);
       color: #fff;
       padding: 0.42rem 0.7rem;
       font: inherit;
@@ -1547,6 +1564,7 @@
     body .continue-button,
     body .scale-button,
     body .add-power-button,
+    body .clear-power-search,
     body .suggestion-chip {
       background-color: rgba(var(--theme-accent-rgb), 0.1);
     }
@@ -1557,6 +1575,7 @@
     body .continue-button:hover,
     body .scale-button:hover,
     body .add-power-button:hover,
+    body .clear-power-search:hover,
     body .suggestion-chip:hover {
       background-color: rgba(var(--theme-accent-rgb), 0.22);
     }
@@ -1737,7 +1756,10 @@
                 <strong>Power</strong>
                 <input class="class-input" type="hidden" value="Wanderer" aria-label="Power or class">
                 <div class="picker-stack" aria-label="Power picker">
-                  <input class="power-search-input" type="text" placeholder="Search powers..." aria-label="Search powers">
+                  <div class="power-search-row">
+                    <input class="power-search-input" type="text" placeholder="Search powers..." aria-label="Search powers">
+                    <button class="clear-power-search" type="button">Clear</button>
+                  </div>
                   <div class="picker-row">
                     <select class="power-select" aria-label="Choose a power"></select>
                     <button class="add-power-button" type="button">Add</button>
@@ -2559,6 +2581,7 @@
     let lastRoomMessageCount = 0;
     const powerSelect = document.querySelector(".power-select");
     const powerSearchInput = document.querySelector(".power-search-input");
+    const clearPowerSearch = document.querySelector(".clear-power-search");
     const powerCustomInput = document.querySelector(".power-custom-input");
     const selectedPowersBox = document.querySelector(".selected-powers");
     const universeSelect = document.querySelector(".universe-select");
@@ -2655,6 +2678,7 @@
 
     function addSelectedPower() {
       const selectedId = powerSelect.value;
+      if (!selectedId) return;
       if (selectedId === "custom") {
         const customName = powerCustomInput.value.trim();
         if (!customName) return;
@@ -2721,6 +2745,10 @@
       const query = powerSearchInput.value.trim().toLowerCase();
       const current = powerSelect.value;
       powerSelect.innerHTML = "";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = query ? "Choose from filtered powers..." : "Choose a power...";
+      powerSelect.append(placeholder);
       const groups = ["JJK", "Naruto", "Invincible", "Re:Zero", "Original", "Custom"];
       groups.forEach((groupName) => {
         const group = document.createElement("optgroup");
@@ -2738,7 +2766,7 @@
       if ([...powerSelect.options].some((option) => option.value === current)) {
         powerSelect.value = current;
       } else {
-        powerSelect.value = powerSelect.options[0]?.value || "custom";
+        powerSelect.value = "";
       }
       powerCustomInput.classList.remove("is-visible");
     }
@@ -2746,7 +2774,7 @@
     function populatePickers() {
       populatePowerOptions();
       if ([...powerSelect.options].some((option) => option.value === "jjk-limitless")) {
-        powerSelect.value = "jjk-limitless";
+        powerSelect.value = "";
       }
 
       universeSelect.innerHTML = "";
@@ -3608,6 +3636,13 @@
     powerSearchInput.addEventListener("input", () => {
       populatePowerOptions();
       powerCustomInput.classList.toggle("is-visible", powerSelect.value === "custom");
+    });
+    clearPowerSearch.addEventListener("click", () => {
+      powerSearchInput.value = "";
+      populatePowerOptions();
+      powerSelect.value = "";
+      powerCustomInput.classList.remove("is-visible");
+      powerSearchInput.focus();
     });
     document.querySelector(".add-power-button").addEventListener("click", addSelectedPower);
     powerCustomInput.addEventListener("keydown", (event) => {
