@@ -1240,18 +1240,18 @@
     }
 
     body.is-world-transitioning .transition-gate {
-      animation: gateOpen 8s ease-in-out both;
+      animation: gateOpen 12s ease-in-out both;
     }
 
     body.is-world-transitioning .world-card {
-      animation: worldClip 1.72s ease-in-out both;
+      animation: worldClip 2.35s ease-in-out both;
     }
 
-    body.is-world-transitioning .world-card:nth-child(1) { animation-delay: 0.15s; }
-    body.is-world-transitioning .world-card:nth-child(2) { animation-delay: 1.7s; }
-    body.is-world-transitioning .world-card:nth-child(3) { animation-delay: 3.25s; }
-    body.is-world-transitioning .world-card:nth-child(4) { animation-delay: 4.8s; }
-    body.is-world-transitioning .world-card:nth-child(5) { animation-delay: 6.35s; }
+    body.is-world-transitioning .world-card:nth-child(1) { animation-delay: 0.2s; }
+    body.is-world-transitioning .world-card:nth-child(2) { animation-delay: 2.25s; }
+    body.is-world-transitioning .world-card:nth-child(3) { animation-delay: 4.3s; }
+    body.is-world-transitioning .world-card:nth-child(4) { animation-delay: 6.35s; }
+    body.is-world-transitioning .world-card:nth-child(5) { animation-delay: 8.4s; }
 
     .world-card img {
       width: 100%;
@@ -1298,7 +1298,27 @@
     }
 
     body.is-world-transitioning .transition-flash {
-      animation: transitionFlash 8s ease-in-out both;
+      animation: transitionFlash 12s ease-in-out both;
+    }
+
+    .journey-begins-title {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      color: #fff7ed;
+      font-size: clamp(2.4rem, 7vw, 6rem);
+      font-weight: 900;
+      text-align: center;
+      text-transform: uppercase;
+      text-shadow: 0 8px 36px rgba(0, 0, 0, 0.95), 0 0 30px rgba(250, 204, 21, 0.38);
+      padding: 2rem;
+    }
+
+    body.is-world-transitioning .journey-begins-title {
+      animation: journeyBegins 12s ease-in-out both;
     }
 
     body.is-world-transitioning .journey-ui {
@@ -1421,16 +1441,33 @@
     }
 
     @keyframes transitionFlash {
-      0%, 72% {
+      0%, 82% {
         opacity: 0;
       }
 
-      88% {
+      92% {
         opacity: 0.75;
       }
 
       100% {
         opacity: 0;
+      }
+    }
+
+    @keyframes journeyBegins {
+      0%, 82% {
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+      }
+
+      88%, 96% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateY(-12px) scale(1.02);
       }
     }
   </style>
@@ -1457,6 +1494,7 @@
         <article class="world-card"><img src="assets/transition-fantasy.gif" alt=""><span>Custom Fantasy</span></article>
       </div>
       <div class="transition-gate"></div>
+      <div class="journey-begins-title">Your journey begins here</div>
       <div class="transition-flash"></div>
     </section>
     <section class="character-screen" aria-label="Create your character">
@@ -2129,7 +2167,7 @@
         document.body.classList.remove("is-world-transitioning");
         document.body.classList.add("has-started");
         saveState();
-      }, 8200);
+      }, 12200);
     });
 
     document.querySelector(".back-button").addEventListener("click", goBackOneScreen);
