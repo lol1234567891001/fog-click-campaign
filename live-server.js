@@ -1,9 +1,11 @@
 const fs = require("fs");
 const http = require("http");
+const net = require("net");
 const path = require("path");
 
 const root = __dirname;
-const port = Number(process.env.PORT || 5173);
+loadDotEnv(path.join(root, ".env"));
+const preferredPort = Number(process.env.PORT || 5173);
 const host = process.env.HOST || "0.0.0.0";
 const isProduction = process.env.NODE_ENV === "production";
 const clients = new Set();
@@ -14,6 +16,27 @@ const rooms = new Map();
 const dataDir = path.join(root, "data");
 const campaignsPath = path.join(dataDir, "campaigns.json");
 const campaigns = new Map();
+
+function loadDotEnv(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) return;
+    const lines = fs.readFileSync(filePath, "utf8").split(/\r?\n/);
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#")) continue;
+      const index = trimmed.indexOf("=");
+      if (index === -1) continue;
+      const key = trimmed.slice(0, index).trim();
+      let value = trimmed.slice(index + 1).trim();
+      value = value.replace(/^["']|["']$/g, "");
+      if (key && !process.env[key]) {
+        process.env[key] = value;
+      }
+    }
+  } catch (error) {
+    console.warn("Could not load .env file", error);
+  }
+}
 
 function loadCampaigns() {
   try {
@@ -639,6 +662,32 @@ if (!isProduction) {
   });
 }
 
-server.listen(port, host, () => {
-  console.log(`Live server running at http://${host}:${port}`);
+function isPortOpen(portToTry) {
+  return new Promise((resolve) => {
+    const tester = net.createServer()
+      .once("error", () => resolve(false))
+      .once("listening", () => {
+        tester.close(() => resolve(true));
+      })
+      .listen(portToTry, host);
+  });
+}
+
+async function findPort(startPort) {
+  if (process.env.PORT) return startPort;
+  for (let portToTry = startPort; portToTry <= 5190; portToTry += 1) {
+    if (await isPortOpen(portToTry)) return portToTry;
+    console.log(`Port ${portToTry} is in use. Trying ${portToTry + 1}...`);
+  }
+  throw new Error("No open port found between 5173 and 5190.");
+}
+
+findPort(preferredPort).then((portToUse) => {
+  server.listen(portToUse, host, () => {
+    const localHost = host === "0.0.0.0" ? "localhost" : host;
+    console.log(`Live server running at http://${localHost}:${portToUse}`);
+  });
+}).catch((error) => {
+  console.error(error);
+  process.exit(1);
 });

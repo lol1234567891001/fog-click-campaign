@@ -13,6 +13,10 @@ This app is now deployable as a Node web service.
 
 Do not put API keys in `index.html` or commit them to Git.
 
+## Local Keys
+
+For local testing, copy `.env.example` to `.env` and replace the placeholder values. `.env` is ignored by Git.
+
 ## Render Deployment
 
 1. Put this `fog-click-site` folder in a GitHub repository.
