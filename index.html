@@ -1192,6 +1192,137 @@
       transform: scale(1);
     }
 
+    .world-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 7;
+      pointer-events: none;
+      opacity: 0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.16), transparent 16%),
+        linear-gradient(115deg, rgba(7, 5, 5, 0.96), rgba(24, 11, 11, 0.94));
+      transition: opacity 380ms ease;
+      overflow: hidden;
+    }
+
+    body.is-world-transitioning .world-transition {
+      opacity: 1;
+    }
+
+    .transition-gate {
+      position: absolute;
+      inset: 50% auto auto 50%;
+      width: min(58vmin, 520px);
+      aspect-ratio: 1;
+      border-radius: 999px;
+      transform: translate(-50%, -50%) scale(0.28);
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      background:
+        radial-gradient(circle, transparent 34%, rgba(250, 204, 21, 0.16) 35%, rgba(248, 113, 113, 0.14) 52%, transparent 72%),
+        conic-gradient(from 140deg, rgba(248, 113, 113, 0.55), rgba(250, 204, 21, 0.52), rgba(96, 165, 250, 0.38), rgba(248, 113, 113, 0.55));
+      box-shadow: 0 0 90px rgba(248, 113, 113, 0.45), inset 0 0 70px rgba(255, 255, 255, 0.14);
+      animation: gateOpen 4.5s ease-in-out both;
+    }
+
+    .transition-worlds {
+      position: absolute;
+      inset: 8vh -8vw;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(180px, 1fr));
+      gap: 1rem;
+      transform: translateX(14vw) scale(1.08);
+      animation: worldSweep 4.5s cubic-bezier(0.22, 0.72, 0.18, 1) both;
+    }
+
+    .world-card {
+      position: relative;
+      min-height: 78vh;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      transform: skewX(-5deg);
+      filter: saturate(1.12) contrast(1.1);
+    }
+
+    .world-card::before,
+    .world-card::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+    }
+
+    .world-card::before {
+      animation: worldDrift 4.5s ease-in-out both;
+    }
+
+    .world-card::after {
+      background:
+        linear-gradient(180deg, transparent 0 52%, rgba(0, 0, 0, 0.68)),
+        repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 5px);
+      mix-blend-mode: overlay;
+    }
+
+    .world-card span {
+      position: absolute;
+      left: 1rem;
+      bottom: 1rem;
+      z-index: 1;
+      font-size: clamp(1rem, 2.2vw, 2rem);
+      font-weight: 900;
+      text-transform: uppercase;
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.9);
+      transform: skewX(5deg);
+    }
+
+    .world-card.jjk::before {
+      background:
+        radial-gradient(circle at 70% 18%, rgba(37, 99, 235, 0.5), transparent 18%),
+        radial-gradient(circle at 22% 74%, rgba(248, 113, 113, 0.38), transparent 19%),
+        linear-gradient(140deg, #101010, #391313 46%, #090909);
+    }
+
+    .world-card.naruto::before {
+      background:
+        radial-gradient(circle at 72% 20%, rgba(250, 204, 21, 0.5), transparent 16%),
+        linear-gradient(150deg, #11240f, #d97706 45%, #1e293b);
+    }
+
+    .world-card.invincible::before {
+      background:
+        radial-gradient(circle at 50% 24%, rgba(96, 165, 250, 0.55), transparent 18%),
+        linear-gradient(155deg, #07111f, #1d4ed8 46%, #facc15);
+    }
+
+    .world-card.rezero::before {
+      background:
+        radial-gradient(circle at 62% 32%, rgba(216, 180, 254, 0.48), transparent 18%),
+        linear-gradient(145deg, #111827, #4c1d95 44%, #f8fafc);
+    }
+
+    .world-card.original::before {
+      background:
+        radial-gradient(circle at 55% 16%, rgba(250, 204, 21, 0.48), transparent 16%),
+        linear-gradient(150deg, #11100b, #166534 42%, #7f1d1d);
+    }
+
+    .transition-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.92), transparent 60%);
+      opacity: 0;
+      animation: transitionFlash 4.5s ease-in-out both;
+    }
+
+    body.is-world-transitioning .journey-ui {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-20px) scale(0.96);
+    }
+
+    body.is-world-transitioning .valley::before {
+      filter: saturate(1.25) contrast(1.2) brightness(0.8);
+      transform: scale(1.28);
+    }
+
     body.is-configuring .character-screen,
     body.is-playing .character-screen {
       opacity: 0;
@@ -1252,6 +1383,71 @@
         opacity: 0.82;
       }
     }
+
+    @keyframes gateOpen {
+      0% {
+        transform: translate(-50%, -50%) scale(0.22) rotate(0deg);
+        opacity: 0;
+      }
+
+      16% {
+        opacity: 1;
+      }
+
+      72% {
+        transform: translate(-50%, -50%) scale(1.08) rotate(200deg);
+        opacity: 0.95;
+      }
+
+      100% {
+        transform: translate(-50%, -50%) scale(5.4) rotate(310deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes worldSweep {
+      0% {
+        opacity: 0;
+        transform: translateX(20vw) scale(1.18);
+      }
+
+      14% {
+        opacity: 1;
+      }
+
+      78% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+        transform: translateX(-18vw) scale(1.05);
+      }
+    }
+
+    @keyframes worldDrift {
+      from {
+        transform: scale(1.2) translateY(3%);
+      }
+
+      to {
+        transform: scale(1.35) translateY(-3%);
+      }
+    }
+
+    @keyframes transitionFlash {
+      0%, 72% {
+        opacity: 0;
+      }
+
+      88% {
+        opacity: 0.75;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1266,6 +1462,17 @@
     <section class="journey-ui" aria-label="Journey start">
       <h2 class="journey-title">Are you ready to start your journey?</h2>
       <button class="start-button" type="button">Start</button>
+    </section>
+    <section class="world-transition" aria-hidden="true">
+      <div class="transition-worlds">
+        <article class="world-card jjk"><span>Cursed City</span></article>
+        <article class="world-card naruto"><span>Hidden Village</span></article>
+        <article class="world-card invincible"><span>Alien Sky</span></article>
+        <article class="world-card rezero"><span>Royal Capital</span></article>
+        <article class="world-card original"><span>Old Kingdom</span></article>
+      </div>
+      <div class="transition-gate"></div>
+      <div class="transition-flash"></div>
     </section>
     <section class="character-screen" aria-label="Create your character">
       <div class="game-layout">
@@ -1576,6 +1783,7 @@
     let introMusicNodes = [];
     let introMusicTimer = null;
     let introMusicStarted = false;
+    let startTransitionTimer = null;
     let clickAudioContext = null;
     const universeOptions = [
       { value: "Jujutsu Kaisen", label: "JJK" },
@@ -1885,6 +2093,8 @@
     }
 
     function goBackOneScreen() {
+      clearTimeout(startTransitionTimer);
+      document.body.classList.remove("is-world-transitioning");
       if (document.body.classList.contains("is-playing")) {
         document.body.classList.remove("is-playing");
         document.body.classList.add("is-configuring");
@@ -1916,9 +2126,15 @@
 
     document.querySelector(".start-button").addEventListener("click", (event) => {
       event.stopPropagation();
-      stopIntroMusic();
-      document.body.classList.add("has-started");
-      saveState();
+      if (document.body.classList.contains("is-world-transitioning")) return;
+      document.body.classList.add("is-world-transitioning");
+      clearTimeout(startTransitionTimer);
+      startTransitionTimer = setTimeout(() => {
+        stopIntroMusic();
+        document.body.classList.remove("is-world-transitioning");
+        document.body.classList.add("has-started");
+        saveState();
+      }, 4300);
     });
 
     document.querySelector(".back-button").addEventListener("click", goBackOneScreen);
