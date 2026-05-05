@@ -1899,6 +1899,7 @@
     function loadVoices() {
       if (!("speechSynthesis" in window)) return;
       const voices = window.speechSynthesis.getVoices()
+        .filter((voice) => /^en[-_]/i.test(voice.lang || "") || /English/i.test(voice.name || ""))
         .sort((a, b) => a.name.localeCompare(b.name));
       const currentValue = voiceSelect.value;
       voiceSelect.innerHTML = '<option value="">Browser fallback voice</option>';
