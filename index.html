@@ -1770,6 +1770,29 @@
       });
     }
 
+    async function refreshPowerBreakdown(scene = "Campaign start") {
+      const box = document.querySelector(".power-breakdown");
+      const previous = box.textContent;
+      box.textContent = "Power Breakdown AI updating...";
+
+      try {
+        const response = await fetch("/api/power-breakdown", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sheet: getCharacterSheet(),
+            currentPowerBreakdown: previous,
+            scene,
+          }),
+        });
+        const data = await response.json();
+        box.textContent = data.powerBreakdown || data.message || previous;
+      } catch (error) {
+        box.textContent = previous || "Power Breakdown AI could not update.";
+      }
+      saveState();
+    }
+
     function renderLinkedDataSummary() {
       const sheet = getCharacterSheet();
       document.querySelector(".linked-data-summary").textContent =
@@ -1955,6 +1978,7 @@
       renderPlaySheet();
       document.body.classList.remove("is-configuring");
       document.body.classList.add("is-playing");
+      refreshPowerBreakdown("Campaign start. Use the character sheet, recap, and requested tracking fields to initialize the console.");
       saveState();
       if (document.querySelector(".auto-read-toggle").checked) {
         speakText(latestNarration);
@@ -2005,6 +2029,8 @@
         }
         if (data.powerBreakdown) {
           document.querySelector(".power-breakdown").textContent = data.powerBreakdown;
+        } else {
+          refreshPowerBreakdown(result);
         }
         if (data.memory) {
           document.querySelector(".memory-output").textContent = data.memory;
@@ -2211,6 +2237,7 @@
           }
           if (message.threat) pulseThreat();
           if (message.powerBreakdown) document.querySelector(".power-breakdown").textContent = message.powerBreakdown;
+          if (message.speaker === "Narrator" && !message.powerBreakdown) refreshPowerBreakdown(message.text);
           if (message.memory) document.querySelector(".memory-output").textContent = message.memory;
           if (Array.isArray(message.choices) && message.choices.length) renderActionChoices(message.choices);
         });

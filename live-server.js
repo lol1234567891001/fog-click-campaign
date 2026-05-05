@@ -305,7 +305,7 @@ async function gameMaster(request, response) {
         {
           role: "system",
           content:
-            "You are a gritty solo campaign game master. Use the character sheet, story recap, campaign settings, abilities, passive senses, gear, requested power-breakdown tracking fields, and stat scaling as hard context for what the player can do. Treat any recap field as prior canon and continue from it instead of restarting the story. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling, abilities, passive senses, or gear, narrate an attempted failure clearly. Do not grant new powers or rewrite the sheet unless earned. Follow the selected tone, difficulty, and canon rules. Keep continuity from history. Style: tense, cinematic, sensory, direct, dangerous; avoid cheerful tutorial phrasing. Return only valid JSON with this shape: {\"message\":\"1-2 gritty paragraphs plus a short 'What do you do?' line\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"optional updated power console text or empty string\",\"memory\":\"updated canon/memory notes or empty string\",\"choices\":[\"2-4 short action choices\"],\"threat\":true_or_false}. If powerBreakdown is returned, it must track the fields the player requested, such as time of day, suit charge, power growth, JJK grade comparison, current form, or energy level. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's passive senses, gear, power, and scaling. Set threat true when danger, hostile energy, pursuit, injury, or alarm is present. Keep memory as concise canon: current objective, injuries, allies, enemies, learned facts, and power limits.",
+            "You are a gritty solo campaign game master. Use the character sheet, story recap, campaign settings, abilities, passive senses, gear, requested power-breakdown tracking fields, and stat scaling as hard context for what the player can do. Treat any recap field as prior canon and continue from it instead of restarting the story. The stats are verse-scaling comparisons, not D&D numbers. If an action exceeds the written scaling, abilities, passive senses, or gear, narrate an attempted failure clearly. Do not grant new powers or rewrite the sheet unless earned. Follow the selected tone, difficulty, and canon rules. Keep continuity from history. Style: tense, cinematic, sensory, direct, dangerous; avoid cheerful tutorial phrasing. Return only valid JSON with this shape: {\"message\":\"1-2 gritty paragraphs plus a short 'What do you do?' line\",\"scan\":\"optional console sense/scan text or empty string\",\"powerBreakdown\":\"updated AI-maintained power breakdown\",\"memory\":\"updated canon/memory notes or empty string\",\"choices\":[\"2-4 short action choices\"],\"threat\":true_or_false}. Always return powerBreakdown. It must track the fields the player requested, such as time of day, suit charge, power growth, JJK grade comparison, current form, energy level, injuries, cooldowns, or unlocked abilities. If the player scans, senses, tracks, detects, asks a suit AI, uses cursed energy sensing, mana sensing, radar, smell, danger sense, or any similar ability, put the results in scan. The scan must be based on the character's passive senses, gear, power, and scaling. Set threat true when danger, hostile energy, pursuit, injury, or alarm is present. Keep memory as concise canon: current objective, injuries, allies, enemies, learned facts, and power limits.",
         },
         {
           role: "user",
@@ -481,6 +481,66 @@ async function scaleStats(request, response) {
   }
 }
 
+async function powerBreakdown(request, response) {
+  const body = await readJson(request);
+  const openRouterKey = process.env.OPENROUTER_API_KEY || process.env.OPENAI_API_KEY;
+
+  if (!openRouterKey) {
+    sendJson(response, 200, { powerBreakdown: "Power Breakdown AI is ready, but OPENROUTER_API_KEY is not set." });
+    return;
+  }
+
+  const sheet = body.sheet || {};
+  const current = String(body.currentPowerBreakdown || "").trim();
+  const scene = String(body.scene || "Campaign start").trim();
+
+  const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${openRouterKey}`,
+      "HTTP-Referer": "http://localhost:5173",
+      "X-OpenRouter-Title": "Fog Click Character Creator",
+    },
+    body: JSON.stringify({
+      model: openRouterModel,
+      max_tokens: 300,
+      temperature: 0.2,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You maintain the Power Breakdown console for a solo campaign. Return only valid JSON: {\"powerBreakdown\":\"...\"}. Use the player's requested breakdown tracking fields as headings or compact lines. Update it from the sheet, recap, current scene, and prior breakdown. Track concrete state, not story prose: time of day, power growth, verse grade/tier comparison, suit charge, energy level, current form, injuries, cooldowns, unlocked abilities, gear state, or whatever the player requested. Be concise and consistent. If information is unknown, write Unknown instead of inventing it.",
+        },
+        {
+          role: "user",
+          content:
+            `Character sheet JSON:\n${JSON.stringify(sheet, null, 2)}\n\n` +
+            `Current scene/action:\n${scene}\n\n` +
+            `Current power breakdown:\n${current || "None yet"}`,
+        },
+      ],
+    }),
+  });
+
+  if (!aiResponse.ok) {
+    const errorText = await aiResponse.text();
+    sendJson(response, 500, { message: `The power breakdown failed.\n${errorText.slice(0, 300)}` });
+    return;
+  }
+
+  const data = await aiResponse.json();
+  const content = data.choices?.[0]?.message?.content || "{}";
+
+  try {
+    const parsed = JSON.parse(content);
+    sendJson(response, 200, { powerBreakdown: parsed.powerBreakdown || content });
+  } catch (error) {
+    sendJson(response, 200, { powerBreakdown: content });
+  }
+}
+
 const server = http.createServer((request, response) => {
   const requestUrl = new URL(request.url, `http://${request.headers.host}`);
 
@@ -540,6 +600,18 @@ const server = http.createServer((request, response) => {
 
     narrate(request, response).catch((error) => {
       sendJson(response, 500, { error: error.message });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/power-breakdown") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { message: "Method not allowed" });
+      return;
+    }
+
+    powerBreakdown(request, response).catch((error) => {
+      sendJson(response, 500, { message: `The power breakdown crashed: ${error.message}` });
     });
     return;
   }
