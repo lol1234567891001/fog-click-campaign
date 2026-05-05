@@ -2108,7 +2108,6 @@
         if (data.powerBreakdown) {
           setPowerBreakdown(data.powerBreakdown);
         }
-        refreshPowerBreakdown(result);
         if (data.memory) {
           document.querySelector(".memory-output").textContent = data.memory;
         }
@@ -2314,7 +2313,6 @@
           }
           if (message.threat) pulseThreat();
           if (message.powerBreakdown) setPowerBreakdown(message.powerBreakdown);
-          if (message.speaker === "Narrator") refreshPowerBreakdown(message.text);
           if (message.memory) document.querySelector(".memory-output").textContent = message.memory;
           if (Array.isArray(message.choices) && message.choices.length) renderActionChoices(message.choices);
         });
