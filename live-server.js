@@ -128,11 +128,25 @@ function sendJson(response, statusCode, data) {
   response.end(JSON.stringify(data));
 }
 
+function cleanJsonishText(value) {
+  let text = String(value ?? "").trim();
+  text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  text = text.replace(/^json\s*[\r\n]+/i, "").trim();
+
+  const objectStart = text.indexOf("{");
+  const objectEnd = text.lastIndexOf("}");
+  if (objectStart !== -1 && objectEnd > objectStart) {
+    text = text.slice(objectStart, objectEnd + 1).trim();
+  }
+
+  return text;
+}
+
 function parseMaybeJson(value) {
   let parsed = value;
   for (let index = 0; index < 4; index += 1) {
     if (typeof parsed !== "string") break;
-    const trimmed = parsed.trim();
+    const trimmed = cleanJsonishText(parsed);
     if (!trimmed || (!trimmed.startsWith("{") && !trimmed.startsWith("[") && !trimmed.startsWith("\""))) break;
     try {
       parsed = JSON.parse(trimmed);
@@ -178,7 +192,7 @@ function formatPowerBreakdown(value, indent = 0) {
     }).join("\n");
   }
 
-  return String(parsed === "" || parsed == null ? "" : parsed);
+  return cleanJsonishText(parsed === "" || parsed == null ? "" : parsed);
 }
 
 function decodeJsonStringFragment(fragment) {
