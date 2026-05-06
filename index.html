@@ -260,6 +260,7 @@
     .voice-input-button,
     .audio-button,
     .continue-button,
+    .clear-campaign-button,
     .scale-button,
     .add-power-button,
     .suggestion-chip {
@@ -270,6 +271,7 @@
     .voice-input-button:hover,
     .audio-button:hover,
     .continue-button:hover,
+    .clear-campaign-button:hover,
     .scale-button:hover,
     .add-power-button:hover,
     .suggestion-chip:hover {
@@ -484,6 +486,12 @@
       text-shadow: 0 3px 18px rgba(0, 0, 0, 0.85);
     }
 
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+    }
+
     .continue-button {
       width: 100%;
       margin-top: 0.9rem;
@@ -562,7 +570,8 @@
     }
 
     .randomize-button,
-    .scale-button {
+    .scale-button,
+    .clear-campaign-button {
       flex: 0 0 auto;
       min-height: 48px;
       border: 2px solid rgba(255, 255, 255, 0.78);
@@ -581,7 +590,9 @@
     .randomize-button:hover,
     .randomize-button:focus-visible,
     .scale-button:hover,
-    .scale-button:focus-visible {
+    .scale-button:focus-visible,
+    .clear-campaign-button:hover,
+    .clear-campaign-button:focus-visible {
       border-color: #fff;
       background: rgba(250, 204, 21, 0.24);
       outline: none;
@@ -1976,7 +1987,10 @@
           <section class="hud-panel character-sheet">
             <header class="character-header">
               <h2>Character Sheet</h2>
-              <button class="scale-button" type="button">Scale Stats</button>
+              <div class="header-actions">
+                <button class="scale-button" type="button">Scale Stats</button>
+                <button class="clear-campaign-button" type="button">Clear Campaign</button>
+              </div>
             </header>
             <div class="sheet-details">
               <details class="setup-section" open>
@@ -2924,6 +2938,65 @@
     restCatalogs.forEach(([prefix, universe, type, names]) => {
       powerCatalog.push(...names.map((name) => makeRestPower(`${prefix}-${slugPowerName(name)}`, universe, name, type)));
     });
+    powerCatalog.push(makePower(
+      "jojo-nameless-anubis",
+      "JoJo",
+      "Nameless Anubis",
+      "Nameless Anubis: a bound sword Stand with no normal humanoid body. It possesses whoever draws or grips the blade, pushes their body into expert swordsmanship, memorizes enemy techniques after witnessing them, adapts to repeated attacks, phases the blade through matter for surprise angles, and can fight through unwilling hosts. It is strongest when it has time to learn an opponent's rhythm, copy their timing, and exploit openings with ruthless precision.",
+      "Blade-memory awareness, killing-intent reading through the wielder, enemy technique recognition after observation, host-body condition feedback, and Stand-user pressure within close range.",
+      "Anubis sword, sheath or wrappings, current possessed wielder, optional hidden carry case. The sword itself is the Stand focus and must be protected from disarmament, sealing, or destruction.",
+      "Current wielder, possession control, copied techniques, adaptation progress, blade condition, enemy styles learned, disarm/seal risk."
+    ));
+    const universeDetailProfiles = {
+      "JJK": "Frame every technique through cursed energy output, domain pressure, binding vows, reverse cursed technique limits, anti-domain counters, cursed tool synergy, grade comparison, and the difference between raw threat level and actual combat effectiveness.",
+      "Naruto": "Frame every ability through chakra reserves, nature transformation, clan/body traits, jutsu rank, hand-sign requirements, dojutsu or sensory limits, battlefield role, and how the power scales from genin-level use to Kage-tier mastery.",
+      "Invincible": "Frame every power through superhero combat, durability, mobility, collateral risk, alien biology or technology, public exposure, team tactics, and how the user compares to street, Guardian, Viltrumite, or cosmic threats.",
+      "Re:Zero": "Frame every power through mana cost, Divine Protection rules, Witch Factor backlash, authority conditions, emotional triggers, political consequences, and survival in a low-information fantasy world.",
+      "MHA": "Frame every quirk through activation condition, training ceiling, body strain, hero applications, rescue utility, villain counters, support gear, awakening potential, and matchup logic against common quirk categories.",
+      "Hunter x Hunter": "Frame every Hatsu through Nen type, aura cost, vows and restrictions, range, condition payoff, combat deception, counters through Gyo/In/En/Zetsu, and how skillful opponents can exploit weak rules.",
+      "Bleach": "Frame every power through reiatsu, release state, speed technique, spiritual sensing, Bankai or Vollstandig risk, Hollow/Quincy/Shinigami counters, and soul-level consequences.",
+      "One Piece": "Frame every power through Devil Fruit type, Haki interaction, sea-stone and ocean weakness, awakening potential, crew role, island-scale utility, and matchup against Logia, Zoan, Paramecia, and Haki users.",
+      "Chainsaw Man": "Frame every power through fear scaling, blood cost, contract price, hybrid or fiend regeneration, Public Safety tactics, psychological cost, and how devils exploit fear and bargains.",
+      "Demon Slayer": "Frame every power through breathing rhythm, blade color, physical conditioning, demon weaknesses, poison or regeneration counters, mark risk, and the difference between visual style and literal supernatural effect.",
+      "Black Clover": "Frame every spell through grimoire pages, mana reserves, attribute matchup, Mana Zone, arrays, spirit/devil influence, anti-magic counters, and Magic Knight combat role.",
+      "Fire Force": "Frame every ignition through generation type, oxygen, heat tolerance, Adolla link, grace amplification, Infernal threats, company tactics, and overheating risk.",
+      "JoJo": "Frame every Stand through range, precision, destructive power, durability, speed, development potential, activation rule, user vulnerability, and puzzle-combat counters. Make the ability feel specific and strange, not generic.",
+      "Solo Leveling": "Frame every skill through rank, class role, System growth, mana, cooldowns, dungeon utility, shadow or summon control, boss-fight value, and how it scales from low-rank hunter to national or monarch tier.",
+      "Original": "Frame every power through current state, growth triggers, emotional fuel, physical cost, sensory utility, special forms, and clear limits so the narrator can judge attempts fairly."
+    };
+    const defaultDetailProfile = "Frame this power through activation conditions, combat use, defensive use, mobility, sensing, utility outside combat, training growth, resource cost, counters, cooldowns, risks, and what the narrator should track during play.";
+    function expandPowerDescription(power) {
+      if (!power || power.id === "custom" || power.isExpanded) return power;
+      const profile = universeDetailProfiles[power.universe] || defaultDetailProfile;
+      power.abilities = `${power.abilities}\n\nDetailed play use: ${profile} Include opening moves, advanced applications, noncombat utility, team synergy, stealth or investigation use, and clear failure cases. The narrator should treat ${power.name} as a defined toolkit, not a vague power label: if the player attempts something outside the written kit, require training, a cost, a special condition, or story progression before it works.`;
+      power.senses = `${power.senses || "No special senses listed."}\n\nExpanded sensing rules: track what the user can notice passively, what requires active focus, what can be hidden from them, what range or line-of-sight limits apply, and what false positives or overload symptoms feel like.`;
+      power.gear = `${power.gear || "No required gear."}\n\nGear and support notes: list required focus items, optional support tools, repair or ammo needs, concealment concerns, and what happens if the gear is broken, stolen, sealed, exhausted, or unavailable.`;
+      power.tracks = `${power.tracks || "Track power state, limits, and growth."}\n\nExtra tracker fields: current form/state, energy or stamina cost, cooldowns, injuries, unlocked techniques, mastery level, environmental advantages, enemy adaptations, and one clear verse-specific tier comparison.`;
+      power.isExpanded = true;
+      return power;
+    }
+    powerCatalog.forEach(expandPowerDescription);
+    const expandedSceneTemplates = [
+      ["Quiet Before Disaster", "I begin during a quiet ordinary day in {universe}, moments before a small abnormal event reveals that my power is already connected to something larger."],
+      ["Training Evaluation", "I begin during a formal or informal evaluation where mentors, rivals, or authorities test what my power can actually do under pressure."],
+      ["Ambush Incident", "I begin when an enemy attack interrupts travel, school, work, patrol, or a mission, forcing me to use my power publicly for the first time."],
+      ["Faction Recruitment", "I begin as a major faction notices my abilities and tries to recruit, control, study, or eliminate me before anyone else can."],
+      ["Rival Encounter", "I begin when a rival with a similar or opposite power crosses my path, turning a simple meeting into a dangerous first comparison."],
+      ["Rescue Mission", "I begin during a rescue where civilians, allies, or a trapped stranger force me to balance power, control, and consequences."],
+      ["Hidden Test", "I begin inside a hidden test arranged by someone powerful in the setting, where every choice reveals whether I am a weapon, hero, threat, or survivor."],
+      ["Canon Crossroads", "I begin near a major canon event, close enough to change details but not so close that the story has already decided my role."]
+    ];
+    universeOptions
+      .filter((option) => option.value !== "custom")
+      .forEach((option) => {
+        expandedSceneTemplates.forEach(([label, text]) => {
+          startingSceneOptions.push({
+            universe: option.value,
+            label,
+            text: text.replace("{universe}", option.value),
+          });
+        });
+      });
     let selectedPowerIds = [];
     const customPowers = new Map();
 
@@ -3480,9 +3553,13 @@
       const cleanText = String(text || "").trim();
       if (!cleanText) return current || "";
       const block = `${heading}:\n${cleanText}`;
+      const headingPrefix = `${heading}:`;
       return String(current || "")
         .split(/\n{2,}/)
-        .filter((section) => section.trim() !== block)
+        .filter((section) => {
+          const trimmed = section.trim();
+          return trimmed !== block && !trimmed.startsWith(headingPrefix);
+        })
         .join("\n\n")
         .trim();
     }
@@ -4370,15 +4447,24 @@
       location.reload();
     }
 
-    document.querySelector(".save-campaign").addEventListener("click", saveCampaignOnline);
-    document.querySelector(".load-campaign").addEventListener("click", loadCampaignOnline);
-    document.querySelector(".new-campaign").addEventListener("click", () => {
-      if (!window.confirm("Start a new campaign and clear this browser save?")) return;
+    function clearCampaignSave() {
       stopIntroMusic();
       stopSheetMusic();
       stopNarrationAudio();
       localStorage.removeItem(saveKey);
+      sessionStorage.removeItem(saveKey);
       location.reload();
+    }
+
+    document.querySelector(".save-campaign").addEventListener("click", saveCampaignOnline);
+    document.querySelector(".load-campaign").addEventListener("click", loadCampaignOnline);
+    document.querySelector(".new-campaign").addEventListener("click", () => {
+      if (!window.confirm("Start a new campaign and clear this browser save?")) return;
+      clearCampaignSave();
+    });
+    document.querySelector(".clear-campaign-button").addEventListener("click", () => {
+      if (!window.confirm("Clear this campaign, including autosaved powers, story, chat, and settings? Your access login stays saved.")) return;
+      clearCampaignSave();
     });
 
     document.querySelectorAll(".action-option").forEach((button) => {

@@ -688,9 +688,11 @@ async function scaleStats(request, response) {
     `Campaign settings: ${JSON.stringify(body.campaign || {})}\n` +
     `Story recap / prior canon: ${String(body.storyRecap || body.recap || "No prior story recap")}\n` +
     `Character idea: ${String(body.characterIdea || "No extra idea")}\n\n` +
-    "Act as a strict power-scaling judge, not a story writer. Read the recap and sheet for actual feats, stated abilities, gear, injuries, limits, and outcomes. " +
-    "Scale the character's current stats to the chosen universe from evidence only. If the recap proves the character can fight a top-tier character, say that; if it does not prove it, say the closest supported tier and what evidence is missing. " +
-    "Do not invent random feats, random upgrades, random enemies defeated, or random comparisons. Do not generate story prompts. " +
+    "Act as a strict power-scaling judge, not a story writer. Read the selected powers, abilities, passive senses, gear, starting scene, and recap for actual capability evidence. " +
+    "If there is no meaningful recap, scale from the written powers/abilities/gear as the baseline evidence instead of saying every stat is unknown. Treat canon abilities in the selected power text as available unless the sheet states they are locked, weakened, or unmastered. " +
+    "If a recap exists, use it to refine or limit the baseline: proven feats can raise confidence, injuries/limits can lower current effectiveness, and missing feats should only make specific uncertain details unknown. " +
+    "Scale the character's current stats to the chosen universe. If the powers imply they can fight a top-tier character, say the closest supported comparison and why; if the sheet is vague, say what part is not proven. " +
+    "Do not invent random story events, random upgrades, random enemies defeated, or random prompt hooks. Do not generate story prompts. " +
     "Use concise comparison language like 'below Gojo but above most Grade 1 sorcerers because...', 'can physically contend with Maki-level fighters if the suit is active...', or 'unknown: no speed feat in recap.' " +
     "For each stat, include the evidence basis in the same sentence. Comparisons to known characters/tier names are allowed, but keep them short.";
 
@@ -711,7 +713,7 @@ async function scaleStats(request, response) {
         {
           role: "system",
           content:
-            "Return only valid JSON with this exact shape: {\"stats\":{\"strength\":\"...\",\"dexterity\":\"...\",\"constitution\":\"...\",\"intelligence\":\"...\",\"wisdom\":\"...\",\"charisma\":\"...\"}}. Each value must be one evidence-based power-scaling sentence, not a story prompt and not a D&D dice score. If evidence is weak or missing, say 'unknown' or 'not proven' for that stat instead of inventing scaling. Be conservative and consistent with the recap.",
+            "Return only valid JSON with this exact shape: {\"stats\":{\"strength\":\"...\",\"dexterity\":\"...\",\"constitution\":\"...\",\"intelligence\":\"...\",\"wisdom\":\"...\",\"charisma\":\"...\"}}. Each value must be one evidence-based power-scaling sentence, not a story prompt and not a D&D dice score. Use selected powers, abilities, gear, and passive senses as evidence when recap is empty. If a specific comparison is weak or missing, say what is not proven, but still scale from the documented powers where possible. Be conservative and consistent.",
         },
         { role: "user", content: prompt },
       ],
