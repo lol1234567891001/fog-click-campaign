@@ -1852,6 +1852,43 @@
       min-height: 2.2rem;
       padding: 0 0.7rem;
     }
+
+    .journey-owner-panel {
+      width: min(560px, calc(100vw - 2rem));
+      margin: 1.2rem auto 0;
+      padding: 0.85rem;
+      border: 1px solid rgba(var(--theme-rgb), 0.42);
+      background: rgba(0, 0, 0, 0.42);
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .journey-owner-panel h3 {
+      margin: 0;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .journey-owner-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+    }
+
+    .journey-owner-row input {
+      min-height: 2.7rem;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(0, 0, 0, 0.38);
+      color: white;
+      padding: 0.6rem 0.75rem;
+      font: inherit;
+    }
+
+    .journey-owner-row button,
+    .journey-owner-panel .owner-code-button {
+      min-height: 2.7rem;
+    }
   </style>
 </head>
 <body class="access-locked">
@@ -1906,6 +1943,19 @@
     <section class="journey-ui" aria-label="Journey start">
       <h2 class="journey-title">Are you ready to start your journey?</h2>
       <button class="start-button" type="button">Start</button>
+      <div class="journey-owner-panel" aria-label="Owner request tools">
+        <h3>Owner Requests</h3>
+        <div class="journey-owner-row">
+          <input class="start-owner-password-input" type="password" placeholder="Owner password" aria-label="Owner password">
+          <button class="start-owner-requests-button" type="button">View Requests</button>
+        </div>
+        <div class="journey-owner-row">
+          <input class="start-owner-device-input" type="text" placeholder="Customer Device ID" aria-label="Customer Device ID">
+          <button class="start-owner-code-button" type="button">Create Code</button>
+        </div>
+        <p class="start-owner-code-output" aria-live="polite"></p>
+        <div class="start-owner-request-list owner-request-list" aria-live="polite"></div>
+      </div>
     </section>
     <section class="world-transition" aria-hidden="true">
       <div class="transition-worlds">
@@ -3163,6 +3213,12 @@
     const ownerRequestsButton = document.querySelector(".owner-requests-button");
     const ownerCodeOutput = document.querySelector(".owner-code-output");
     const ownerRequestList = document.querySelector(".owner-request-list");
+    const startOwnerPasswordInput = document.querySelector(".start-owner-password-input");
+    const startOwnerDeviceInput = document.querySelector(".start-owner-device-input");
+    const startOwnerRequestsButton = document.querySelector(".start-owner-requests-button");
+    const startOwnerCodeButton = document.querySelector(".start-owner-code-button");
+    const startOwnerCodeOutput = document.querySelector(".start-owner-code-output");
+    const startOwnerRequestList = document.querySelector(".start-owner-request-list");
 
     function setAccessStatus(message) {
       accessStatus.textContent = message;
@@ -3214,13 +3270,13 @@
       }
     }
 
-    async function loadOwnerRequests() {
-      const ownerPassword = accessPasswordInput.value.trim();
+    async function loadOwnerRequests(passwordInput = accessPasswordInput, requestList = ownerRequestList, deviceInput = ownerDeviceInput, output = ownerCodeOutput) {
+      const ownerPassword = passwordInput.value.trim();
       if (!ownerPassword) {
-        ownerCodeOutput.textContent = "Type your owner password first.";
+        output.textContent = "Type your owner password first.";
         return;
       }
-      ownerRequestList.textContent = "Loading requests...";
+      requestList.textContent = "Loading requests...";
       try {
         const response = await nativeFetch("/api/access/requests", {
           method: "POST",
@@ -3229,9 +3285,9 @@
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Could not load requests.");
-        ownerRequestList.innerHTML = "";
+        requestList.innerHTML = "";
         if (!data.requests.length) {
-          ownerRequestList.textContent = "No requests yet.";
+          requestList.textContent = "No requests yet.";
           return;
         }
         data.requests.forEach((request) => {
@@ -3248,30 +3304,30 @@
           useButton.type = "button";
           useButton.textContent = "Use Device ID";
           useButton.addEventListener("click", () => {
-            ownerDeviceInput.value = request.deviceId;
-            ownerCodeOutput.textContent = `Password for ${request.deviceId}: ${request.code}`;
+            deviceInput.value = request.deviceId;
+            output.textContent = `Password for ${request.deviceId}: ${request.code}`;
           });
           item.append(deviceLine, codeLine, requestedLine);
           item.append(useButton);
-          ownerRequestList.append(item);
+          requestList.append(item);
         });
       } catch (error) {
-        ownerRequestList.textContent = error.message;
+        requestList.textContent = error.message;
       }
     }
 
-    async function createOwnerCode() {
-      const deviceId = ownerDeviceInput.value.trim();
-      const ownerPassword = accessPasswordInput.value.trim();
+    async function createOwnerCode(deviceInput = ownerDeviceInput, passwordInput = accessPasswordInput, output = ownerCodeOutput) {
+      const deviceId = deviceInput.value.trim();
+      const ownerPassword = passwordInput.value.trim();
       if (!deviceId) {
-        ownerCodeOutput.textContent = "Paste the customer's Device ID first.";
+        output.textContent = "Paste the customer's Device ID first.";
         return;
       }
       if (!ownerPassword) {
-        ownerCodeOutput.textContent = "Type your owner password first.";
+        output.textContent = "Type your owner password first.";
         return;
       }
-      ownerCodeOutput.textContent = "Creating code...";
+      output.textContent = "Creating code...";
       try {
         const response = await nativeFetch("/api/access/create", {
           method: "POST",
@@ -3280,9 +3336,9 @@
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Could not create code.");
-        ownerCodeOutput.textContent = `Password for ${data.deviceId}: ${data.code}`;
+        output.textContent = `Password for ${data.deviceId}: ${data.code}`;
       } catch (error) {
-        ownerCodeOutput.textContent = error.message;
+        output.textContent = error.message;
       }
     }
 
@@ -3292,8 +3348,10 @@
     }
     accessUnlockButton.addEventListener("click", verifyAccessPassword);
     accessRequestButton.addEventListener("click", requestDeviceAccess);
-    ownerCodeButton.addEventListener("click", createOwnerCode);
-    ownerRequestsButton.addEventListener("click", loadOwnerRequests);
+    ownerCodeButton.addEventListener("click", () => createOwnerCode());
+    ownerRequestsButton.addEventListener("click", () => loadOwnerRequests());
+    startOwnerCodeButton.addEventListener("click", () => createOwnerCode(startOwnerDeviceInput, startOwnerPasswordInput, startOwnerCodeOutput));
+    startOwnerRequestsButton.addEventListener("click", () => loadOwnerRequests(startOwnerPasswordInput, startOwnerRequestList, startOwnerDeviceInput, startOwnerCodeOutput));
     accessPasswordInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") verifyAccessPassword();
     });
@@ -3336,11 +3394,11 @@
       startIntroMusic();
     });
 
-    document.querySelector(".start-button").addEventListener("click", async (event) => {
+    document.querySelector(".start-button").addEventListener("click", (event) => {
       event.stopPropagation();
       if (document.body.classList.contains("is-world-transitioning")) return;
-      await restartTransitionGifs();
       document.body.classList.add("is-world-transitioning");
+      restartTransitionGifs();
       clearTimeout(startTransitionTimer);
       startTransitionTimer = setTimeout(() => {
         stopIntroMusic();
