@@ -170,6 +170,27 @@ async function createCustomerAccess(request, response) {
   sendJson(response, 200, { deviceId, code });
 }
 
+async function listAccessRequests(request, response) {
+  const body = await readJson(request);
+  const ownerPassword = String(body.ownerPassword || "").trim();
+  if (ownerPassword !== masterAccessPassword) {
+    sendJson(response, 401, { error: "Owner password required." });
+    return;
+  }
+
+  const requests = [...accessCodes.entries()]
+    .map(([deviceId, record]) => ({
+      deviceId,
+      code: record.code || createAccessCode(deviceId),
+      createdAt: record.createdAt || "",
+      lastRequestedAt: record.lastRequestedAt || "",
+      lastCreatedAt: record.lastCreatedAt || "",
+    }))
+    .sort((left, right) => String(right.lastRequestedAt || right.createdAt).localeCompare(String(left.lastRequestedAt || left.createdAt)));
+
+  sendJson(response, 200, { requests });
+}
+
 async function verifyAccess(request, response) {
   const body = await readJson(request);
   const deviceId = String(body.deviceId || "").trim();
@@ -822,6 +843,18 @@ const server = http.createServer((request, response) => {
 
     createCustomerAccess(request, response).catch((error) => {
       sendJson(response, 500, { error: `Code creation failed: ${error.message}` });
+    });
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/access/requests") {
+    if (request.method !== "POST") {
+      sendJson(response, 405, { error: "Method not allowed" });
+      return;
+    }
+
+    listAccessRequests(request, response).catch((error) => {
+      sendJson(response, 500, { error: `Request list failed: ${error.message}` });
     });
     return;
   }

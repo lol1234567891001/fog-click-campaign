@@ -1830,6 +1830,28 @@
     .owner-tools input {
       width: 100%;
     }
+
+    .owner-request-list {
+      display: grid;
+      gap: 0.45rem;
+      max-height: 11rem;
+      overflow: auto;
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .owner-request-item {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.6rem;
+      display: grid;
+      gap: 0.3rem;
+    }
+
+    .owner-request-item button {
+      justify-self: start;
+      min-height: 2.2rem;
+      padding: 0 0.7rem;
+    }
   </style>
 </head>
 <body class="access-locked">
@@ -1849,7 +1871,9 @@
           <h3>Create Customer Code</h3>
           <input class="owner-device-input" type="text" placeholder="Customer Device ID" aria-label="Customer Device ID">
           <button class="owner-code-button" type="button">Create Code</button>
+          <button class="owner-requests-button" type="button">View Requests</button>
           <p class="owner-code-output" aria-live="polite"></p>
+          <div class="owner-request-list" aria-live="polite"></div>
         </div>
       </div>
     </div>
@@ -3136,7 +3160,9 @@
     const accessStatus = document.querySelector(".access-status");
     const ownerDeviceInput = document.querySelector(".owner-device-input");
     const ownerCodeButton = document.querySelector(".owner-code-button");
+    const ownerRequestsButton = document.querySelector(".owner-requests-button");
     const ownerCodeOutput = document.querySelector(".owner-code-output");
+    const ownerRequestList = document.querySelector(".owner-request-list");
 
     function setAccessStatus(message) {
       accessStatus.textContent = message;
@@ -3179,13 +3205,58 @@
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Request failed.");
-        setAccessStatus(`Request created for ${data.ownerEmail}.`);
-        window.location.href = data.mailto;
+        setAccessStatus(`Request saved. Give the owner this Device ID: ${accessDeviceId}`);
       } catch (error) {
         const subject = encodeURIComponent("Fog Click Campaign access request");
         const body = encodeURIComponent(`Device ID: ${accessDeviceId}\nRequested password for Fog Click Campaign.`);
         window.location.href = `mailto:ellisonbrayden5@gmail.com?subject=${subject}&body=${body}`;
         setAccessStatus("Server did not answer, so I opened the email request instead.");
+      }
+    }
+
+    async function loadOwnerRequests() {
+      const ownerPassword = accessPasswordInput.value.trim();
+      if (!ownerPassword) {
+        ownerCodeOutput.textContent = "Type your owner password first.";
+        return;
+      }
+      ownerRequestList.textContent = "Loading requests...";
+      try {
+        const response = await nativeFetch("/api/access/requests", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ownerPassword }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Could not load requests.");
+        ownerRequestList.innerHTML = "";
+        if (!data.requests.length) {
+          ownerRequestList.textContent = "No requests yet.";
+          return;
+        }
+        data.requests.forEach((request) => {
+          const item = document.createElement("div");
+          item.className = "owner-request-item";
+          const requested = request.lastRequestedAt ? new Date(request.lastRequestedAt).toLocaleString() : "No request time";
+          const deviceLine = document.createElement("strong");
+          deviceLine.textContent = request.deviceId;
+          const codeLine = document.createElement("span");
+          codeLine.textContent = `Password: ${request.code}`;
+          const requestedLine = document.createElement("span");
+          requestedLine.textContent = `Requested: ${requested}`;
+          const useButton = document.createElement("button");
+          useButton.type = "button";
+          useButton.textContent = "Use Device ID";
+          useButton.addEventListener("click", () => {
+            ownerDeviceInput.value = request.deviceId;
+            ownerCodeOutput.textContent = `Password for ${request.deviceId}: ${request.code}`;
+          });
+          item.append(deviceLine, codeLine, requestedLine);
+          item.append(useButton);
+          ownerRequestList.append(item);
+        });
+      } catch (error) {
+        ownerRequestList.textContent = error.message;
       }
     }
 
@@ -3222,6 +3293,7 @@
     accessUnlockButton.addEventListener("click", verifyAccessPassword);
     accessRequestButton.addEventListener("click", requestDeviceAccess);
     ownerCodeButton.addEventListener("click", createOwnerCode);
+    ownerRequestsButton.addEventListener("click", loadOwnerRequests);
     accessPasswordInput.addEventListener("keydown", (event) => {
       if (event.key === "Enter") verifyAccessPassword();
     });
