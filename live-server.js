@@ -14,7 +14,7 @@ const openRouterModel = process.env.OPENROUTER_MODEL || "openai/gpt-4o-mini";
 const elevenLabsVoiceName = process.env.ELEVENLABS_VOICE_NAME || "Jonathan Livingston";
 let cachedElevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID || "";
 const ownerEmail = process.env.ACCESS_OWNER_EMAIL || "ellisonbrayden5@gmail.com";
-const masterAccessPassword = process.env.MASTER_ACCESS_PASSWORD || "1986";
+const masterAccessPassword = process.env.MASTER_ACCESS_PASSWORD || "19862010";
 const accessSecret = process.env.ACCESS_TOKEN_SECRET || process.env.OPENROUTER_API_KEY || "fog-click-local-secret";
 const rooms = new Map();
 const dataDir = path.join(root, "data");
@@ -139,7 +139,7 @@ async function requestAccess(request, response) {
   saveAccessCodes();
 
   const subject = encodeURIComponent("Fog Click Campaign access request");
-  const bodyText = encodeURIComponent(`Device ID: ${deviceId}\nRequested password for Fog Click Campaign.\n\nOwner note: open the site, enter 1986, then use Create Customer Code for this Device ID.`);
+  const bodyText = encodeURIComponent(`Device ID: ${deviceId}\nRequested password for Fog Click Campaign.\n\nOwner note: open the site, enter 19862010, then use Create Customer Code for this Device ID.`);
   sendJson(response, 200, {
     ownerEmail,
     mailto: `mailto:${ownerEmail}?subject=${subject}&body=${bodyText}`,
