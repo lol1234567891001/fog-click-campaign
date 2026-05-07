@@ -357,11 +357,19 @@ function decodeJsonStringFragment(fragment) {
   }
 }
 
+function readableNarratorMessage(...values) {
+  for (const value of values) {
+    const text = String(value || "").trim();
+    if (text) return text;
+  }
+  return "The scene moves forward, but the narrator returned no visible narration.";
+}
+
 function normalizeGamePayload(content) {
   const parsed = parseMaybeJson(content);
   if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
     return {
-      message: parsed.message || "The world waits in silence.",
+      message: readableNarratorMessage(parsed.message, parsed.scan, parsed.memory, parsed.powerBreakdown),
       scan: parsed.scan || "",
       powerBreakdown: formatPowerBreakdown(parsed.powerBreakdown || ""),
       memory: parsed.memory || "",
@@ -377,7 +385,7 @@ function normalizeGamePayload(content) {
   const memoryMatch = text.match(/"memory"\s*:\s*"((?:\\.|[^"\\])*)"/s);
 
   return {
-    message: messageMatch ? decodeJsonStringFragment(messageMatch[1]) : (text || "The world waits in silence."),
+    message: readableNarratorMessage(messageMatch ? decodeJsonStringFragment(messageMatch[1]) : text),
     scan: scanMatch ? decodeJsonStringFragment(scanMatch[1]) : "",
     powerBreakdown: powerMatch ? formatPowerBreakdown(decodeJsonStringFragment(powerMatch[1])) : "",
     memory: memoryMatch ? decodeJsonStringFragment(memoryMatch[1]) : "",

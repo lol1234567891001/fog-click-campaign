@@ -4105,12 +4105,20 @@
       }
     }
 
+    function readableNarratorMessage(...values) {
+      for (const value of values) {
+        const text = String(value || "").trim();
+        if (text) return text;
+      }
+      return "The scene moves forward, but the narrator returned no visible narration. Check Scan / Read and Power Breakdown for the updated state.";
+    }
+
     function normalizeGameResponse(data) {
       const parsedMessage = parseMaybeJson(data?.message);
       if (parsedMessage && typeof parsedMessage === "object" && !Array.isArray(parsedMessage)) {
         return {
           ...data,
-          message: parsedMessage.message || "Nothing happens.",
+          message: readableNarratorMessage(parsedMessage.message, parsedMessage.scan, parsedMessage.memory, parsedMessage.powerBreakdown),
           scan: data.scan || parsedMessage.scan || "",
           powerBreakdown: data.powerBreakdown || parsedMessage.powerBreakdown || "",
           memory: data.memory || parsedMessage.memory || "",
@@ -4127,7 +4135,7 @@
         const memoryMatch = messageText.match(/"memory"\s*:\s*"((?:\\.|[^"\\])*)"/s);
         return {
           ...data,
-          message: messageMatch ? decodeJsonStringFragment(messageMatch[1]) : messageText,
+          message: readableNarratorMessage(messageMatch ? decodeJsonStringFragment(messageMatch[1]) : messageText, data.scan, data.memory, data.powerBreakdown),
           scan: data.scan || (scanMatch ? decodeJsonStringFragment(scanMatch[1]) : ""),
           powerBreakdown: data.powerBreakdown || (powerMatch ? decodeJsonStringFragment(powerMatch[1]) : ""),
           memory: data.memory || (memoryMatch ? decodeJsonStringFragment(memoryMatch[1]) : ""),
@@ -4135,7 +4143,10 @@
         };
       }
 
-      return data;
+      return {
+        ...data,
+        message: readableNarratorMessage(data?.message, data?.scan, data?.memory, data?.powerBreakdown),
+      };
     }
 
     function saveState() {
@@ -4615,7 +4626,7 @@
         if (!response.ok) {
           throw new Error(data.message || data.error || "Game master request failed.");
         }
-        const result = data.message || "Nothing happens.";
+        const result = readableNarratorMessage(data.message, data.scan, data.memory, data.powerBreakdown);
         thinking.remove();
         appendMessage(gameLog, "Narrator", result);
         latestNarration = result;
