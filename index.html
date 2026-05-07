@@ -4159,6 +4159,7 @@
         stats: getStatScaling(),
         chatHistory,
         gameHistory,
+        lastGameActionAt,
         latestNarration,
         powerBreakdown: document.querySelector(".game-power-breakdown")?.textContent || "",
         breakdownLiveInstructions: document.querySelector(".breakdown-live-input")?.value || "",
@@ -4424,7 +4425,23 @@
     const roomCodeInput = document.querySelector(".room-code-input");
     const playerNameInput = document.querySelector(".player-name-input");
     let narratorAudio = null;
+    let lastGameActionAt = 0;
     let latestNarration = "Your journey begins. Type what you try to do, and the world will judge it against your sheet.";
+
+    function buildTimeContext() {
+      const now = Date.now();
+      const elapsedMs = lastGameActionAt ? Math.max(0, now - lastGameActionAt) : 0;
+      const realElapsedMinutes = Math.floor(elapsedMs / 60000);
+      const gameElapsedMinutesFromPause = Math.floor(elapsedMs / 1250);
+      const gameElapsedDaysFromPause = Number((gameElapsedMinutesFromPause / 1440).toFixed(2));
+      return {
+        now,
+        realElapsedMinutes,
+        gameElapsedMinutesFromPause,
+        gameElapsedDaysFromPause,
+        rule: "30 real minutes equals 1 full in-game day. Every player action also consumes a reasonable amount of in-game time based on what was attempted.",
+      };
+    }
 
     function cleanSpeechText(text) {
       return text.replace(/\s+/g, " ").replace(/\*\*/g, "").trim();
@@ -4579,6 +4596,7 @@
       gameHistory.push({ role: "user", content: action });
       gameInput.value = "";
       const thinking = appendMessage(gameLog, "Narrator", "Judging the action...");
+      const timeContext = buildTimeContext();
 
       try {
         const response = await fetch("/api/game-master", {
@@ -4590,6 +4608,7 @@
             history: gameHistory,
             currentPowerBreakdown: document.querySelector(".game-power-breakdown").textContent,
             trackerInstructions: document.querySelector(".breakdown-live-input")?.value || "",
+            timeContext,
           }),
         });
         const data = normalizeGameResponse(await response.json());
@@ -4620,6 +4639,7 @@
           renderActionChoices(data.choices);
         }
         gameHistory.push({ role: "assistant", content: result });
+        lastGameActionAt = timeContext.now;
         saveState();
       } catch (error) {
         thinking.remove();
@@ -4962,6 +4982,7 @@
 
         chatHistory.splice(0, chatHistory.length, ...(state.chatHistory || []));
         gameHistory.splice(0, gameHistory.length, ...(state.gameHistory || []));
+        lastGameActionAt = Number(state.lastGameActionAt || 0);
         latestNarration = state.latestNarration || latestNarration;
 
         if (state.stage === "journey" || state.stage === "setup" || state.stage === "settings" || state.stage === "playing") {
