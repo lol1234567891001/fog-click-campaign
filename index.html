@@ -2254,8 +2254,8 @@
               <div class="play-stat-grid"></div>
             </section>
             <section class="console-section">
-              <h3>Scan</h3>
-              <div class="scan-output">No sense data yet. Use your power to scan, sense, track, or detect something in the scene.</div>
+              <h3>Scan / Read</h3>
+              <div class="scan-output">No sense data yet. In Classroom of the Elite, this will show Ayanokoji's read, your passive-sense read, and the canon pressure on the scene.</div>
             </section>
             <section class="console-section">
               <h3>Memory</h3>
@@ -3161,12 +3161,46 @@
       ["owner-cote-insert", "Owner COTE Insert Route", "mastermind", "The owner's personal route package: the player enters Advanced Nurturing in Ayanokoji's cohort, receives a random class assignment, and can alter canon events through social strategy, academics, private points, and risky choices."]
     ];
     powerCatalog.push(...coteAdditionalEntries.map(([id, name, type, detail]) => makeCoteEntry(id, name, type, detail)));
+    function makeCoteRosterEntry(classTag, name, roleDetail) {
+      return makeCoteEntry(
+        `${classTag}-${slugPowerName(name)}`,
+        `${name} Profile`,
+        "profile",
+        `${roleDetail} Treat this student as a real classroom presence with a seat, habits, friends, weak points, possible rumors, exam usefulness, and reactions to the player's choices.`
+      );
+    }
+    const coteRosterGroups = [
+      ["class-1a", "Class 1-A elite-class student", [
+        "Asuka Shiraishi", "Takuro Morishige", "Koji Machida", "Shigeru Takemoto", "Shinji Matoba", "Koharu Yano", "Kenta Yoshida", "Haruka Nishi", "Naoki Shimizu", "Yasumi Sawada", "Ikkei Shimazaki", "Shinobu Fukuyama", "Yusuke Ishida", "Satoru Satonaka", "Hiroshi Sugio", "Mao Tanihara", "Emi Tamiya", "Taiga Tsukasaki", "Shihori Tsukaji", "Shigeru Toba", "Riko Nakajima", "Chikako Motodoi", "Momoe Rokkaku", "Inoe", "Morimiya"
+      ]],
+      ["class-1b", "Class 1-B cooperative student under Ichinose's trust-based culture", [
+        "Tetsuya Hamaguchi", "Ryota Beppu", "Kozue Minamikata", "Yui Ninomiya", "Norihito Watanabe", "Hitomi Tsube", "Katsumi Tokito", "Makoto Sumida", "Haruto Yonezu", "Nakanishi", "Moriyama", "Asako"
+      ]],
+      ["class-1c", "Class 1-C student living under Ryuen's pressure network", [
+        "Saki Yamashita", "Hidetoshi Suzuki", "Masashi Sonoda", "Yuji Nomura", "Yuya Yuki", "Mariko Yajima", "Kosetsu Yoshimoto", "Takumi Oda", "Minori Kinoshita", "Nagisa Isoyama", "Okabe", "Nakaizumi"
+      ]],
+      ["class-1d", "Class 1-D defective-class student from Ayanokoji's enrollment year", [
+        "Wataru Ijuin", "Soshi Miyamoto", "Kyosuke Okitani", "An Maezono", "Susumu Makita", "Hakuo Minami", "Sana Azuma", "Kayoko Ishikura", "Ruri Ichihashi", "Chiyo Sonoda", "Ryuko Nishimura", "Musashi Onizuka", "Eita Kikuchi", "Jo Fukiishi", "Rino Kawabuchi", "Sumi Yada", "Taisei Imanaga"
+      ]],
+      ["second-year", "Upperclassman/second-year pressure piece who can affect student council politics, club networks, and school-wide special exams", [
+        "Manabu Horikita", "Akane Tachibana", "Nagumo Loyalist", "Kiriyama Opposition Student", "Asahina Contact", "Second-Year Class A Operator", "Second-Year Class B Mediator", "Second-Year Class C Enforcer", "Second-Year Class D Survivor"
+      ]],
+      ["third-year", "Third-year senior profile for later arcs, institutional pressure, graduation stakes, and older-class interference", [
+        "Third-Year Student Council Veteran", "Third-Year Class A Strategist", "Third-Year Class B Negotiator", "Third-Year Class C Pressure Player", "Third-Year Class D Survivor", "Graduation Point Broker", "Senior Club Captain", "Senior Dorm Contact"
+      ]],
+      ["new-first-year", "Year 2 incoming first-year profile for later White Room, bounty, and underclassman conflict arcs", [
+        "Yagami Classmate", "Amasawa Classmate", "Nanase Classmate", "Hosen Underling", "Tsubaki Observer", "Utomiya Ally", "Ishigami Contact", "First-Year Bounty Participant", "First-Year Exam Pawn", "First-Year Class Representative Candidate"
+      ]]
+    ];
+    coteRosterGroups.forEach(([classTag, detail, names]) => {
+      powerCatalog.push(...names.map((name) => makeCoteRosterEntry(classTag, name, detail)));
+    });
     startingSceneOptions.unshift(
-      { universe: "Classroom of the Elite", label: "Owner route: random class enrollment", text: "Owner route. I enroll at Tokyo Metropolitan Advanced Nurturing High School in the same first-year cohort as Kiyotaka Ayanokoji. Before the first homeroom, randomly assign me to Class A, B, C, or D and make that assignment matter. Follow the main Classroom of the Elite storyline from the first day forward, but insert me naturally into my assigned class so I can change relationships, exams, class points, private points, and canon outcomes through my actions." },
-      { universe: "Classroom of the Elite", label: "Owner route: Class A insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year but am assigned to Class A. Follow the canon timeline while letting me live inside Class A politics, Sakayanagi and Katsuragi faction pressure, elite expectations, and cross-class special exams." },
-      { universe: "Classroom of the Elite", label: "Owner route: Class B insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year but am assigned to Class B. Follow the canon timeline while letting me affect Ichinose's trust-based class, hidden guilt, reform pressure, and cross-class negotiations." },
-      { universe: "Classroom of the Elite", label: "Owner route: Class C insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year but am assigned to Class C. Follow the canon timeline while letting me survive or challenge Ryuen's fear-based leadership, intimidation network, and special exam aggression." },
-      { universe: "Classroom of the Elite", label: "Owner route: Class D insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year and am assigned to Class D with Ayanokoji, Horikita, Kushida, Kei, Hirata, Sudo, Koenji, and the rest. Follow the main storyline closely while letting my choices change class unity, betrayals, exam results, and who notices Ayanokoji." }
+      { universe: "Classroom of the Elite", label: "Owner route: random class enrollment", text: "Owner route. I enroll at Tokyo Metropolitan Advanced Nurturing High School in the same first-year cohort as Kiyotaka Ayanokoji. Before the first homeroom, randomly assign me to Class A, B, C, or D and make that assignment matter. Strictly follow the main Classroom of the Elite Year 1 storyline from the first day forward unless my direct actions change an event. Always show Ayanokoji's hidden read in the scan console, even if I am in another class, and also show what my selected passive senses/profile intelligence can infer before I decide what to do." },
+      { universe: "Classroom of the Elite", label: "Owner route: Class A insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year but am assigned to Class A. Strictly follow the canon timeline while letting me live inside Class A politics, Sakayanagi and Katsuragi faction pressure, elite expectations, and cross-class special exams. Always show Ayanokoji's read and my passive-sense/profile read in the scan console." },
+      { universe: "Classroom of the Elite", label: "Owner route: Class B insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year but am assigned to Class B. Strictly follow the canon timeline while letting me affect Ichinose's trust-based class, hidden guilt, reform pressure, and cross-class negotiations only through my choices. Always show Ayanokoji's read and my passive-sense/profile read in the scan console." },
+      { universe: "Classroom of the Elite", label: "Owner route: Class C insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year but am assigned to Class C. Strictly follow the canon timeline while letting me survive or challenge Ryuen's fear-based leadership, intimidation network, and special exam aggression only through my choices. Always show Ayanokoji's read and my passive-sense/profile read in the scan console." },
+      { universe: "Classroom of the Elite", label: "Owner route: Class D insertion", text: "Owner route. I enter Advanced Nurturing in Ayanokoji's year and am assigned to Class D with Ayanokoji, Horikita, Kushida, Kei, Hirata, Sudo, Koenji, and the rest. Strictly follow the main storyline closely while letting my choices change class unity, betrayals, exam results, and who notices Ayanokoji. Always show Ayanokoji's read and my passive-sense/profile read in the scan console." }
     );
     const universeDetailProfiles = {
       "JJK": "Frame every technique through cursed energy output, domain pressure, binding vows, reverse cursed technique limits, anti-domain counters, cursed tool synergy, grade comparison, and the difference between raw threat level and actual combat effectiveness.",
