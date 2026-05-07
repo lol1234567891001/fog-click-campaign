@@ -2373,6 +2373,7 @@
       { value: "Overlord", label: "Overlord" },
       { value: "That Time I Got Reincarnated as a Slime", label: "Slime" },
       { value: "Mushoku Tensei", label: "Mushoku Tensei" },
+      { value: "Classroom of the Elite", label: "Classroom of the Elite" },
       { value: "Original fantasy", label: "Original World" },
       { value: "custom", label: "Custom..." },
     ];
@@ -2437,6 +2438,18 @@
       { universe: "Overlord", label: "New World arrival", text: "I begin after being transported to the New World, where classes, guild magic, and kingdom politics immediately matter." },
       { universe: "That Time I Got Reincarnated as a Slime", label: "Monster nation awakening", text: "I begin after reincarnation or awakening in a monster-filled world where skills, names, and evolution shape power." },
       { universe: "Mushoku Tensei", label: "Magic tutor beginning", text: "I begin in a fantasy household or academy where mana training, sword styles, and social choices define the path forward." },
+      { universe: "Classroom of the Elite", label: "Advanced Nurturing first day", text: "I begin on the first day at Tokyo Metropolitan Advanced Nurturing High School, placed into a class where every polite introduction, seating choice, and casual conversation can become future leverage." },
+      { universe: "Classroom of the Elite", label: "First special exam briefing", text: "I begin as the class receives its first special exam briefing, with private points, class points, hidden rules, and faction pressure turning a normal school day into a quiet battlefield." },
+      { universe: "Classroom of the Elite", label: "Class D trust fracture", text: "I begin after a small class mistake creates distrust, forcing me to decide whether to repair the class openly, manipulate from behind the scenes, or let rivals expose themselves." },
+      { universe: "Classroom of the Elite", label: "Student council approach", text: "I begin when an upperclassman or student council contact notices my behavior and tests whether I am useful, dangerous, or worth recruiting." },
+      { universe: "Classroom of the Elite", label: "Cruise ship hidden groups", text: "I begin during a group-based special exam where every class mixes together, identities matter, lies travel fast, and the correct social read is worth more than raw intelligence." },
+      { universe: "Classroom of the Elite", label: "Uninhabited island opening", text: "I begin at the start of an island exam where supplies, leaders, stamina, alliances, and surveillance turn survival into a class-point war." },
+      { universe: "Classroom of the Elite", label: "Rumor war", text: "I begin when rumors start spreading through the year, threatening reputations, relationships, and class unity before anyone knows who planted them." },
+      { universe: "Classroom of the Elite", label: "Paper shuffle preparation", text: "I begin during preparation for an exam where study groups, sabotage, question design, and partner selection become more important than the test itself." },
+      { universe: "Classroom of the Elite", label: "Sports festival pressure", text: "I begin before a sports festival where athletic ability, traitor detection, class morale, and public performance all matter at once." },
+      { universe: "Classroom of the Elite", label: "Mixed training camp", text: "I begin during a mixed training camp where discipline, hidden alliances, group penalties, and leadership disputes force every student to reveal something." },
+      { universe: "Classroom of the Elite", label: "White Room shadow", text: "I begin when someone hints that my past, training, or unnatural calm has been noticed, making the school feel less like freedom and more like another test chamber." },
+      { universe: "Classroom of the Elite", label: "Quiet lunch negotiation", text: "I begin during a harmless-looking lunch conversation where multiple students want different things from me and every answer shifts future trust." },
       { universe: "Original fantasy", label: "Original city gate", text: "I begin at the gate of a dangerous city where guilds, nobles, criminals, and supernatural factions all sense my arrival." },
       { universe: "Original fantasy", label: "Forest awakening", text: "I wake in a mist-heavy forest after a power surge, with signs of a nearby settlement and something tracking me." },
       { universe: "Original fantasy", label: "Academy summons", text: "I begin after receiving a summons to an elite academy that studies dangerous powers, where my entrance test is already underway." },
@@ -2947,6 +2960,145 @@
       "Anubis sword, sheath or wrappings, current possessed wielder, optional hidden carry case. The sword itself is the Stand focus and must be protected from disarmament, sealing, or destruction.",
       "Current wielder, possession control, copied techniques, adaptation progress, blade condition, enemy styles learned, disarm/seal risk."
     ));
+    const coteTemplates = {
+      mastermind: {
+        abilities: "Hidden control, indirect problem solving, proxy use, contingency planning, emotional neutrality, social camouflage, rule exploitation, and quiet opponent dismantling. This should win by making other people move first, reveal information, or believe the result was their own choice.",
+        senses: "Reads incentives, contradictions, fear, pride, social debt, faction pressure, surveillance, bait, and when a student is acting under orders.",
+        gear: "Private points, phone logs, chat records, seating charts, class rosters, exam rules, borrowed favors, blackmail material, and plausible alibis.",
+        tracks: "Suspicion level, public reputation, hidden leverage, private points, allies used, enemy awareness, class point risk, exposed secrets, and active traps."
+      },
+      leader: {
+        abilities: "Class leadership, morale control, delegation, negotiation, visible responsibility, crisis management, and turning scattered students into a coordinated force. Strong in exams where public trust and group discipline matter.",
+        senses: "Reads class morale, loyalty, jealousy, panic, faction splits, useful talent, quiet resentment, and when a group is close to breaking.",
+        gear: "Class group chats, attendance lists, study schedules, public promises, class funds, vote counts, and trusted messengers.",
+        tracks: "Class unity, morale, class points, promises made, faction loyalty, leadership reputation, rivals challenged, and trust reserves."
+      },
+      social: {
+        abilities: "Social infiltration, rumor control, emotional pressure, image management, friendship networks, soft interrogation, and making people volunteer information without realizing it. Powerful when the battlefield is reputation.",
+        senses: "Reads attraction, discomfort, envy, status hunger, hidden grudges, gossip routes, weak friendships, and who is pretending to be fine.",
+        gear: "Contact lists, social media traces, gifts, photos, casual invitations, private conversations, and saved messages.",
+        tracks: "Rumor spread, social debt, reputation, secrets held, broken trust, emotional leverage, friend groups accessed, and backlash risk."
+      },
+      enforcer: {
+        abilities: "Physical intimidation, sports dominance, bodyguard work, pressure tactics, endurance, and making negotiations credible through danger. Best when violence is possible but consequences must be managed.",
+        senses: "Reads aggression, fear responses, body language, likely ambushes, athletic matchups, crowd confidence, and who will fold under pressure.",
+        gear: "Gym access, sports records, witnesses, medical excuses, uniforms, surveillance blind spots, and intimidation reputation.",
+        tracks: "Injury risk, disciplinary risk, intimidation value, stamina, public fear, witness exposure, and whether force helps or worsens the plan."
+      },
+      analyst: {
+        abilities: "Academic planning, rule parsing, probability, exam modeling, opponent profiling, record comparison, and solving hidden systems before the room understands the rules.",
+        senses: "Reads loopholes, scoring traps, false assumptions, pattern changes, academic weak spots, missing information, and manipulated data.",
+        gear: "Exam packets, spreadsheets, notes, whiteboards, answer histories, seating data, rule copies, and study materials.",
+        tracks: "Known rules, suspected hidden rules, score projections, study progress, opponent models, wrong assumptions, and information gaps."
+      },
+      wildcard: {
+        abilities: "Unpredictable disruption, eccentric bargaining, talent spikes, public confusion, strange priorities, and forcing masterminds to account for irrational behavior.",
+        senses: "Reads boredom, opportunity, spectacle, weak authority, social scripts, and places where one weird move can break a careful plan.",
+        gear: "Personal whims, luxury items, strange favors, unexpected contacts, private points, and whatever tool makes the scene unstable.",
+        tracks: "Chaos level, attention drawn, usable confusion, allies annoyed, enemies baited, and whether the disruption created a real opening."
+      },
+      profile: {
+        abilities: "Character-profile simulation, canon-style habits, strengths, weaknesses, social role, pressure reactions, likely plans, and how this student affects class politics.",
+        senses: "Reads this person's tells, loyalties, fears, pride points, academic or physical confidence, and the situations where their mask slips.",
+        gear: "Known contacts, class position, personal reputation, public history, likely private messages, and any resources tied to their role.",
+        tracks: "Relationship status, trust, suspicion, favors owed, secrets learned, current faction, emotional pressure, and whether they are being manipulated."
+      }
+    };
+    function makeCoteEntry(id, name, type, detail) {
+      const template = coteTemplates[type];
+      return makePower(
+        `cote-${id}`,
+        "Classroom of the Elite",
+        name,
+        `${name}: ${detail} ${template.abilities}`,
+        template.senses,
+        template.gear,
+        template.tracks
+      );
+    }
+    const coteEntries = [
+      ["white-room-masterpiece", "White Room Masterpiece", "mastermind", "Ayanokoji-style extreme training packaged as normal student behavior: perfect emotional control, elite physical ability, calculation under stress, and the ability to hide genius behind mediocrity."],
+      ["hidden-puppetmaster", "Hidden Puppetmaster", "mastermind", "A back-seat controller who avoids leadership titles, uses other students as shields, plants ideas through third parties, and keeps the class from knowing who solved the problem."],
+      ["expulsion-trap-planner", "Expulsion Trap Planner", "mastermind", "A specialist in votes, blame, rule timing, disciplinary pressure, and forcing one target into a position where every escape costs them allies or class points."],
+      ["private-point-broker", "Private Point Broker", "social", "A market operator who turns private points into loyalty, information, test answers, protection, favors, and quiet insurance against betrayal."],
+      ["special-exam-architect", "Special Exam Architect", "analyst", "A rules-first strategist who dissects special exams, predicts hidden scoring, identifies exploitable loopholes, and designs plans that still work if one ally fails."],
+      ["class-leader", "Class Leader", "leader", "A visible leader who absorbs pressure, gives orders, handles negotiations, and keeps weak students from panicking during exams where unity is worth points."],
+      ["morale-anchor", "Morale Anchor", "leader", "A support leader who stabilizes classmates, keeps study groups functioning, repairs trust after betrayals, and prevents small arguments from becoming exam-losing fractures."],
+      ["student-council-operator", "Student Council Operator", "mastermind", "A political operator who uses upperclassmen, council rules, school procedure, and public legitimacy to pressure rivals without looking like a bully."],
+      ["rumor-networker", "Rumor Networker", "social", "A reputation specialist who can start, stop, trace, or weaponize rumors while measuring which students spread information fastest."],
+      ["social-chameleon", "Social Chameleon", "social", "A flexible personality mask that fits different friend groups, avoids suspicion, and gathers information from students who would never talk to an obvious strategist."],
+      ["negotiation-specialist", "Negotiation Specialist", "social", "A calm dealmaker who trades points, secrets, study help, protection, and future votes while making each side believe they gained more than they gave."],
+      ["bully-breaker", "Bully Breaker", "enforcer", "A pressure-counter who reads intimidation, turns aggressors against each other, protects isolated targets, and can stop harassment without handing enemies clean evidence."],
+      ["athletic-enforcer", "Athletic Enforcer", "enforcer", "A sports and physical-pressure build useful for festivals, island exams, confrontations, bodyguarding, and creating leverage through visible capability."],
+      ["academic-carry", "Academic Carry", "analyst", "A high-score academic engine who can tutor weak classmates, design study systems, predict exam danger, and protect the class from paper-test collapse."],
+      ["traitor-hunter", "Traitor Hunter", "analyst", "A deception detector focused on leaks, inconsistent stories, vote patterns, timing mistakes, and students whose behavior benefits another class too perfectly."],
+      ["defective-cover", "Defective Cover", "mastermind", "A fake underperformer mask that lowers expectations, invites rivals to underestimate the user, and creates room to act only when the payoff is worth exposure."],
+      ["genius-wildcard", "Genius Wildcard", "wildcard", "A brilliant but unstable piece whose choices are hard to predict, useful for breaking stale stalemates and dangerous because allies cannot fully script them."],
+      ["kiyotaka-ayanokoji", "Kiyotaka Ayanokoji Profile", "profile", "Quiet, unreadable, physically and intellectually monstrous, and careful to avoid public credit. Treat him as a hidden center of gravity who solves problems through minimal visible movement."],
+      ["suzune-horikita", "Suzune Horikita Profile", "profile", "Proud, disciplined, academically elite, socially blunt, and growth-oriented. She starts isolated but can become a real leader if she learns to trust and use classmates correctly."],
+      ["kikyo-kushida", "Kikyo Kushida Profile", "profile", "Publicly kind and beloved, privately manipulative and terrified of exposure. She is a social weapon whose value depends on reputation remaining intact."],
+      ["kei-karuizawa", "Kei Karuizawa Profile", "profile", "A social survivor with strong group access, hidden trauma, and loyalty that becomes powerful once trust is earned. She is excellent for information and reputation warfare."],
+      ["yosuke-hirata", "Yosuke Hirata Profile", "profile", "Popular, moral, athletic, and trusted by classmates. He stabilizes groups but struggles when cruel decisions are required for victory."],
+      ["ken-sudo", "Ken Sudo Profile", "profile", "Athletic, emotional, prideful, and initially reckless. He can become a major physical asset if guided away from disciplinary traps."],
+      ["rokusuke-koenji", "Rokusuke Koenji Profile", "profile", "Absurdly talented, selfish, flamboyant, and almost impossible to command. He can solve problems alone if his interests align, but planning around him is risky."],
+      ["airi-sakura", "Airi Sakura Profile", "profile", "Shy, observant, and vulnerable to social pressure. She notices details others miss but needs safety before she can act confidently."],
+      ["kanji-ike", "Kanji Ike Profile", "profile", "Low academic reliability but socially present and useful in casual group dynamics. He represents the kind of student leaders must carry without letting him become dead weight."],
+      ["haruki-yamauchi", "Haruki Yamauchi Profile", "profile", "Impulsive, insecure, and easy to manipulate through ego or fear. He is a high-risk class member who can become a leak, scapegoat, or cautionary example."],
+      ["keisei-yukimura", "Keisei Yukimura Profile", "profile", "Serious academic specialist with pride in test performance. He is strong for study systems, weak when social nuance matters more than correct answers."],
+      ["akito-miyake", "Akito Miyake Profile", "profile", "Quiet, steady, and physically capable. He works best as reliable support in small trusted groups rather than public leadership."],
+      ["haruka-hasebe", "Haruka Hasebe Profile", "profile", "Relaxed, socially perceptive, and good at reading small-group mood. She helps make isolated students feel human but can be shaken by betrayal."],
+      ["chiaki-matsushita", "Chiaki Matsushita Profile", "profile", "A careful under-the-radar student with more ability than she advertises. She is useful for hidden evaluation and quiet class politics."],
+      ["kayano-onodera", "Kayano Onodera Profile", "profile", "Athletic and competitive, useful in sports events and physical group tasks. Her value rises when class plans need dependable movement or endurance."],
+      ["satsuki-shinohara", "Satsuki Shinohara Profile", "profile", "Socially ordinary but connected enough to show class mood. She works well as a barometer for how normal students interpret elite schemes."],
+      ["maya-satou", "Maya Satou Profile", "profile", "Social, emotionally direct, and useful for romance or reputation pressure scenes. She can expose how personal feelings complicate clean strategy."],
+      ["arisu-sakayanagi", "Arisu Sakayanagi Profile", "profile", "A brilliant, composed chessmaster who enjoys intellectual domination. She fights through prediction, loyal subordinates, and traps that punish simple morality."],
+      ["kohei-katsuragi", "Kohei Katsuragi Profile", "profile", "Cautious, honorable, and strategic but not socially ruthless enough to control every piece. Strong in structured contests and weaker against chaotic manipulation."],
+      ["masayoshi-hashimoto", "Masayoshi Hashimoto Profile", "profile", "Smooth, observant, and opportunistic. He tests people through casual contact and reports value to stronger players while keeping his own options open."],
+      ["masumi-kamuro", "Masumi Kamuro Profile", "profile", "Blunt, guarded, and tied to Sakayanagi's orbit. She is useful as a reluctant contact, pressure point, or honest read inside Class A politics."],
+      ["honami-ichinose", "Honami Ichinose Profile", "profile", "Charismatic, kind, and trusted, with a leadership style built on transparency and group loyalty. Powerful socially, vulnerable to guilt and moral traps."],
+      ["ryuji-kanzaki", "Ryuji Kanzaki Profile", "profile", "Serious, principled, and increasingly frustrated by soft leadership. He is a reform pressure inside Ichinose's class."],
+      ["sou-shibata", "Sou Shibata Profile", "profile", "Friendly, athletic, and socially useful. He is good for cooperation scenes where warm public trust matters."],
+      ["yuki-himeno", "Yuki Himeno Profile", "profile", "Quiet and dissatisfied with class direction. She can become a subtle internal critic or hidden ally if treated seriously."],
+      ["kakeru-ryuen", "Kakeru Ryuen Profile", "profile", "Ruthless, violent, fearless, and practical. He controls through terror, tests enemies directly, and respects results more than rules."],
+      ["mio-ibuki", "Mio Ibuki Profile", "profile", "Combative, independent, athletic, and bad at hiding irritation. She is useful for infiltration, fights, and scenes where honesty leaks through hostility."],
+      ["daichi-ishizaki", "Daichi Ishizaki Profile", "profile", "Loud, loyal, physical, and not deeply strategic. He is a good follower for intimidation plans and a liability in subtle operations."],
+      ["albert-yamada", "Albert Yamada Profile", "profile", "Physically imposing, quiet, and loyal to Ryuen. His presence changes negotiation math even when he says almost nothing."],
+      ["satoru-kaneda", "Satoru Kaneda Profile", "profile", "Analytical support in Ryuen's class, useful for academic plans and rule interpretation without becoming the public face."],
+      ["hiyori-shiina", "Hiyori Shiina Profile", "profile", "Calm, bookish, perceptive, and gentle. She can notice emotional truths and hidden motives that louder strategists miss."],
+      ["miyabi-nagumo", "Miyabi Nagumo Profile", "profile", "Ambitious student council powerhouse who treats the school like a system to dominate. He is dangerous through scale, authority, and mass participation."],
+      ["ikuo-kiriyama", "Ikuo Kiriyama Profile", "profile", "A constrained upperclassman balancing opposition and survival. He is useful for showing how power can trap people inside their own faction."],
+      ["fuka-kiryuin", "Fuka Kiryuin Profile", "profile", "Independent, talented, bored by ordinary hierarchy, and willing to test interesting people. She is a high-level wildcard ally or observer."],
+      ["nazuna-asahina", "Nazuna Asahina Profile", "profile", "Upperclass social contact with student council ties. She can provide access, rumors, and pressure from outside the first-year battlefield."],
+      ["tsubasa-nanase", "Tsubasa Nanase Profile", "profile", "Polite, capable, and carrying hidden motives. She should be played as someone whose loyalty and mission are not the same thing."],
+      ["kazuomi-hosen", "Kazuomi Hosen Profile", "profile", "Brutal, dominant, and openly dangerous. He pressures through physical fear and forces others to decide how far they will go to stop him."],
+      ["ichika-amasawa", "Ichika Amasawa Profile", "profile", "Playful, dangerous, physically elite, and manipulative. Her teasing hides real capability and uncertain loyalty."],
+      ["takuya-yagami", "Takuya Yagami Profile", "profile", "Polished, intelligent, and deeply dangerous under a friendly surface. Treat him as a hidden rival who can plan several steps ahead."],
+      ["sakurako-tsubaki", "Sakurako Tsubaki Profile", "profile", "Low-energy, cryptic, and harder to read than she first appears. She works as a quiet planner inside first-year politics."],
+      ["riku-utomiya", "Riku Utomiya Profile", "profile", "Serious, observant, and physically reliable. Useful as a grounded first-year presence with possible hidden loyalty conflicts."],
+      ["sae-chabashira", "Sae Chabashira Profile", "profile", "Cold homeroom teacher who knows more than she says and pressures students through rules, past regret, and selective hints."],
+      ["tomoya-mashima", "Tomoya Mashima Profile", "profile", "Strict, fair, and professional teacher figure. He is useful when rules, discipline, and adult oversight matter."],
+      ["chie-hoshinomiya", "Chie Hoshinomiya Profile", "profile", "Playful teacher with sharp social awareness and old rivalries. She can make adult politics feel personal and messy."],
+      ["kazuma-sakagami", "Kazuma Sakagami Profile", "profile", "Ryuen's homeroom teacher, detached and used to rough class methods. He represents adult tolerance for harsh competition."],
+      ["chairman-sakayanagi", "Chairman Sakayanagi Profile", "profile", "Institutional authority with calm intelligence and hidden knowledge. He can protect, test, or restrict players through school power."],
+      ["tsukishiro", "Tsukishiro Profile", "profile", "Administrative threat tied to outside agendas. He makes the school feel unsafe by bending authority toward a private mission."],
+      ["class-grunt-loyalist", "Class Grunt: Loyalist", "leader", "A minor student who follows the strongest class voice, carries messages, votes reliably, and becomes useful when loyalty matters more than talent."],
+      ["class-grunt-information-leak", "Class Grunt: Information Leak", "social", "A minor student who talks too much, repeats rumors, exposes plans by accident, and can be protected, baited, or weaponized."],
+      ["class-grunt-saboteur", "Class Grunt: Saboteur", "mastermind", "A minor student planted or pressured into small acts of disruption: late messages, missing notes, wrong meeting times, or suspicious vote shifts."],
+      ["class-grunt-swing-vote", "Class Grunt: Swing Vote", "social", "A minor student whose loyalty is undecided and whose vote can decide an expulsion, class policy, or faction split."],
+      ["class-grunt-study-anchor", "Class Grunt: Study Anchor", "analyst", "A minor student who is not a genius but reliably improves group scores through attendance, repetition, and keeping weaker classmates on schedule."],
+      ["class-grunt-athletic-specialist", "Class Grunt: Athletic Specialist", "enforcer", "A minor student useful in sports festivals, island movement, physical errands, and intimidation scenes without being a main fighter."],
+      ["class-grunt-social-node", "Class Grunt: Social Node", "social", "A minor student connected to several friend groups, useful for measuring mood and spreading soft information without obvious orders."],
+      ["class-grunt-isolated-target", "Class Grunt: Isolated Target", "social", "A minor student with few allies, making them vulnerable to bullying, false accusations, recruitment, or protection plays."],
+      ["class-grunt-rich-kid", "Class Grunt: Private Point Rich Kid", "social", "A minor student with spending power, status anxiety, and the ability to fund plans if properly flattered or pressured."],
+      ["class-grunt-rule-lawyer", "Class Grunt: Rule Lawyer", "analyst", "A minor student obsessed with wording, technicalities, and teacher statements. Useful for loopholes but prone to missing human motives."],
+      ["class-grunt-club-contact", "Class Grunt: Club Contact", "social", "A minor student whose club membership gives access to athletes, seniors, equipment rooms, gossip, and off-class relationships."],
+      ["class-grunt-panic-risk", "Class Grunt: Panic Risk", "leader", "A minor student likely to crack under pressure, leak plans, miss deadlines, or force leaders to spend resources stabilizing them."],
+      ["class-grunt-faction-runner", "Class Grunt: Faction Runner", "social", "A minor student who carries orders between stronger personalities and reveals faction structure if watched closely."],
+      ["class-grunt-disposable-witness", "Class Grunt: Disposable Witness", "mastermind", "A minor student positioned to see one important thing, making them valuable for alibis, false testimony, or moral complications."],
+      ["class-grunt-scapegoat-candidate", "Class Grunt: Scapegoat Candidate", "mastermind", "A minor student whose poor reputation makes them easy to blame, creating a test of whether the player exploits or protects them."],
+      ["custom-cote-strategist", "Custom COTE Strategist", "mastermind", "A flexible Classroom of the Elite social-combat package for custom students, original classes, transfer students, or player-made rivals."]
+    ];
+    powerCatalog.push(...coteEntries.map(([id, name, type, detail]) => makeCoteEntry(id, name, type, detail)));
     const universeDetailProfiles = {
       "JJK": "Frame every technique through cursed energy output, domain pressure, binding vows, reverse cursed technique limits, anti-domain counters, cursed tool synergy, grade comparison, and the difference between raw threat level and actual combat effectiveness.",
       "Naruto": "Frame every ability through chakra reserves, nature transformation, clan/body traits, jutsu rank, hand-sign requirements, dojutsu or sensory limits, battlefield role, and how the power scales from genin-level use to Kage-tier mastery.",
@@ -2961,6 +3113,7 @@
       "Black Clover": "Frame every spell through grimoire pages, mana reserves, attribute matchup, Mana Zone, arrays, spirit/devil influence, anti-magic counters, and Magic Knight combat role.",
       "Fire Force": "Frame every ignition through generation type, oxygen, heat tolerance, Adolla link, grace amplification, Infernal threats, company tactics, and overheating risk.",
       "JoJo": "Frame every Stand through range, precision, destructive power, durability, speed, development potential, activation rule, user vulnerability, and puzzle-combat counters. Make the ability feel specific and strange, not generic.",
+      "Classroom of the Elite": "Frame every profile through private points, class points, special exam rules, public reputation, hidden leverage, faction loyalty, social debt, academic value, physical credibility, teacher oversight, expulsion risk, and whether a move helps the class openly or manipulates the result from the shadows.",
       "Solo Leveling": "Frame every skill through rank, class role, System growth, mana, cooldowns, dungeon utility, shadow or summon control, boss-fight value, and how it scales from low-rank hunter to national or monarch tier.",
       "Original": "Frame every power through current state, growth triggers, emotional fuel, physical cost, sensory utility, special forms, and clear limits so the narrator can judge attempts fairly."
     };
@@ -3718,7 +3871,7 @@
       placeholder.value = "";
       placeholder.textContent = query ? "Choose from filtered powers..." : "Choose a power...";
       powerSelect.append(placeholder);
-      const groups = ["JJK", "Naruto", "Invincible", "Re:Zero", "MHA", "Hunter x Hunter", "Bleach", "One Piece", "Chainsaw Man", "Demon Slayer", "Black Clover", "Fire Force", "JoJo", "Solo Leveling", "Attack on Titan", "Tokyo Ghoul", "Hell's Paradise", "Dororo", "Berserk", "Magi", "Noragami", "Blue Exorcist", "Katekyo Hitman Reborn", "Soul Eater", "Mob Psycho 100", "Darker than Black", "A Certain Magical Index", "Fate", "Sword Art Online", "Overlord", "That Time I Got Reincarnated as a Slime", "Mushoku Tensei", "Original", "Custom"];
+      const groups = ["JJK", "Naruto", "Invincible", "Re:Zero", "MHA", "Hunter x Hunter", "Bleach", "One Piece", "Chainsaw Man", "Demon Slayer", "Black Clover", "Fire Force", "JoJo", "Classroom of the Elite", "Solo Leveling", "Attack on Titan", "Tokyo Ghoul", "Hell's Paradise", "Dororo", "Berserk", "Magi", "Noragami", "Blue Exorcist", "Katekyo Hitman Reborn", "Soul Eater", "Mob Psycho 100", "Darker than Black", "A Certain Magical Index", "Fate", "Sword Art Online", "Overlord", "That Time I Got Reincarnated as a Slime", "Mushoku Tensei", "Original", "Custom"];
       groups.forEach((groupName) => {
         const group = document.createElement("optgroup");
         group.label = groupName;
